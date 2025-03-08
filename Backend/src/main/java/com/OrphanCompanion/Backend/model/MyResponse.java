@@ -1,4 +1,10 @@
 package com.OrphanCompanion.Backend.model;
+
+
+
+//Represents the database entities or domain objects.
+
+
 public class MyResponse {
     private String message;
 

@@ -5,6 +5,9 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+
+//This Class contains the Routing logic for all http paths
+//Handles HTTP requests and contains routing logic.
 @RestController
 @CrossOrigin(origins = "${frontend.url}")
 public class AvatarController {
