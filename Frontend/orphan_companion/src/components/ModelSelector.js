@@ -1,40 +1,39 @@
 'use client';
-
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 const models = [
   {
-    id: 'mom',
-    role: 'Mom',
-    name: 'Sarah',
-    description: 'Warm, nurturing, and always ready with practical advice.',
-    color: 'bg-[#E8A87C]',
-    avatar: 'M'
+    id: "mom",
+    role: "Mom",
+    name: "Sarah",
+    description: "Warm, nurturing, and always ready with practical advice.",
+    color: "bg-[#E8A87C]",
+    avatar: "M"
   },
   {
-    id: 'dad',
-    role: 'Dad',
-    name: 'Michael',
-    description: 'Thoughtful, protective, with a touch of humor and wisdom.',
-    color: 'bg-family-deep-blue',
-    avatar: 'D'
+    id: "dad",
+    role: "Dad",
+    name: "Michael",
+    description: "Thoughtful, protective, with a touch of humor and wisdom.",
+    color: "bg-family-deep-blue",
+    avatar: "D"
   },
   {
-    id: 'sibling',
-    role: 'Sibling',
-    name: 'Alex',
-    description: 'Fun, relatable, and always ready to listen.',
-    color: 'bg-[#5D9BD5]',
-    avatar: 'S'
+    id: "sibling",
+    role: "Sibling",
+    name: "Alex",
+    description: "Fun, relatable, and always ready to listen.",
+    color: "bg-[#5D9BD5]",
+    avatar: "S"
   },
   {
-    id: 'grandparent',
-    role: 'Grandparent',
-    name: 'Eleanor',
-    description: 'Patient, full of stories, and offering wisdom.',
-    color: 'bg-[#D6A2E8]',
-    avatar: 'G'
+    id: "grandparent",
+    role: "Grandparent",
+    name: "Eleanor",
+    description: "Patient, full of stories, and offering wisdom.",
+    color: "bg-[#D6A2E8]",
+    avatar: "G"
   }
 ];
 

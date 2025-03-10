@@ -28,19 +28,19 @@ const Footer = () => {
             <h3 className="font-medium text-lg mb-4">Navigation</h3>
             <ul className="space-y-2">
               <li><Link href="/" className="text-family-text-light hover:text-family-deep-blue transition-colors">Home</Link></li>
-              <li><Link href="/about" className="text-family-text-light hover:text-family-deep-blue transition-colors">About</Link></li>
-              <li><Link href="/models" className="text-family-text-light hover:text-family-deep-blue transition-colors">Family Models</Link></li>
-              <li><Link href="/chatbot" className="text-family-text-light hover:text-family-deep-blue transition-colors">Chatbot</Link></li>
+              <li><Link href="/About" className="text-family-text-light hover:text-family-deep-blue transition-colors">About</Link></li>
+              <li><Link href="/Models" className="text-family-text-light hover:text-family-deep-blue transition-colors">Family Models</Link></li>
+              <li><Link href="/ChatBot" className="text-family-text-light hover:text-family-deep-blue transition-colors">Chatbot</Link></li>
             </ul>
           </div>
 
           <div className="md:col-span-2">
             <h3 className="font-medium text-lg mb-4">Family Models</h3>
             <ul className="space-y-2">
-              <li><Link href="/chatbot?model=mom" className="text-family-text-light hover:text-family-deep-blue transition-colors">Mom</Link></li>
-              <li><Link href="/chatbot?model=dad" className="text-family-text-light hover:text-family-deep-blue transition-colors">Dad</Link></li>
-              <li><Link href="/chatbot?model=sibling" className="text-family-text-light hover:text-family-deep-blue transition-colors">Sibling</Link></li>
-              <li><Link href="/chatbot?model=grandparent" className="text-family-text-light hover:text-family-deep-blue transition-colors">Grandparent</Link></li>
+              <li><Link href="/ChatBot?model=mom" className="text-family-text-light hover:text-family-deep-blue transition-colors">Mom</Link></li>
+              <li><Link href="/ChatBot?model=dad" className="text-family-text-light hover:text-family-deep-blue transition-colors">Dad</Link></li>
+              <li><Link href="/ChatBot?model=sibling" className="text-family-text-light hover:text-family-deep-blue transition-colors">Sibling</Link></li>
+              <li><Link href="/ChatBot?model=grandparent" className="text-family-text-light hover:text-family-deep-blue transition-colors">Grandparent</Link></li>
             </ul>
           </div>
 
@@ -49,7 +49,7 @@ const Footer = () => {
             <p className="text-family-text-light mb-4">
               Experience the support and connection you deserve.
             </p>
-            <Link href="/models" className="btn-primary inline-block">
+            <Link href="/Models" className="btn-primary inline-block">
               Start Chatting
             </Link>
           </div>
