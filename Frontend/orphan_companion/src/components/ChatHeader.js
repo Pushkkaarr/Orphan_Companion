@@ -32,7 +32,7 @@ const ChatHeader = ({
     const names = {
       mom: 'Mummy',
       dad: 'Papa',
-      sibling: 'Sibling',
+      sibling: 'Brother',
       grandparent: 'Grandparent'
     };
     return names[selectedModel] || selectedModel.charAt(0).toUpperCase() + selectedModel.slice(1);

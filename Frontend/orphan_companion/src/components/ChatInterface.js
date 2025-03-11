@@ -79,7 +79,7 @@ const ChatInterface = ({ initialModel = 'mom', showSidebar = true, toggleSidebar
     const modelEndpoints = {
       'mom': 'mother',
       'dad': 'father',
-      'sibling': 'sibling',
+      'bro': 'bro',
       'grandparent': 'grandparent'
     };
     

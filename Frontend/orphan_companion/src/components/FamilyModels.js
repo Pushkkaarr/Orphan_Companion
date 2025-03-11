@@ -22,7 +22,7 @@ const models = [
     previewMessage: "I'm here if you need any advice or just want to chat about your day."
   },
   {
-    role: "Sibling",
+    role: "Brother", //this is where the url changes
     name: "Alex",
     description: "Fun, relatable, and always ready to listen or offer a different perspective.",
     color: "bg-[#5D9BD5]",

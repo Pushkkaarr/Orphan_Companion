@@ -4,7 +4,8 @@ const cors = require('cors');
 
 // const pool = require('./config/db');
 const contentRoutes = require('./routes/fatherRoutes');
-const motherRoutes = require('./routes/motherRoute')
+const motherRoutes = require('./routes/motherRoute');
+const brotherRoutes = require('./routes/brotherRoutes');
 
 dotenv.config();
 
@@ -22,7 +23,8 @@ app.use(express.json());
 //   });
 
 app.use('/api/model', contentRoutes);
-app.use('/api/model',motherRoutes)
+app.use('/api/model',motherRoutes);
+app.use('/api', brotherRoutes);
 
 const PORT = process.env.PORT || 5000;
 

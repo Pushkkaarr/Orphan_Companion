@@ -5,3 +5,5 @@ const motherController = require('../controllers/motherController')
 // Route to generate a response from the Gemini model
 
 router.post('/mother', motherController.generateResponse);
+
+module.exports = router;
