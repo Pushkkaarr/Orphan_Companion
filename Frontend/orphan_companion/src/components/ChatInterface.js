@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X } from 'lucide-react';
+import axios from 'axios';
 import ChatHistory from './ChatHistory';
 import ChatHeader from './ChatHeader';
 import ChatMessages from './ChatMessages';
 import ChatInput from './ChatInput';
-import { modelResponses, voiceConfigs, welcomeMessages } from '../utlis/chatUtils';
+import { welcomeMessages, voiceConfigs } from '../utlis/chatUtils';
 
 const ChatInterface = ({ initialModel = 'mom', showSidebar = true, toggleSidebar = () => {} }) => {
   const [selectedModel, setSelectedModel] = useState(initialModel);
@@ -72,8 +73,20 @@ const ChatInterface = ({ initialModel = 'mom', showSidebar = true, toggleSidebar
   const filteredConversations = conversations.filter(
     conversation => conversation.model === selectedModel
   );
+
+  // Map model names to their API endpoints
+  const getModelEndpoint = (modelName) => {
+    const modelEndpoints = {
+      'mom': 'mother',
+      'dad': 'father',
+      'sibling': 'sibling',
+      'grandparent': 'grandparent'
+    };
+    
+    return modelEndpoints[modelName] || 'father'; // Default to father if not found
+  };
   
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
     
     const newUserMessage = {
@@ -100,28 +113,50 @@ const ChatInterface = ({ initialModel = 'mom', showSidebar = true, toggleSidebar
       setActiveConversationId(newConversation.id);
     }
     
-    setTimeout(() => {
-      const responses = modelResponses[selectedModel];
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+    try {
+      // Determine which API to call based on the selected model
+      const modelEndpoint = getModelEndpoint(selectedModel);
+      const apiUrl = `http://localhost:5000/api/model/${modelEndpoint}`;
+      
+      // Make the API call to the backend
+      const response = await axios.post(apiUrl, {
+        message: inputValue
+      });
+      
+      // Extract the response text from the API response
+      const responseText = response.data.response;
       
       const newBotMessage = {
         id: (Date.now() + 1).toString(),
-        content: randomResponse,
+        content: responseText,
         sender: 'bot',
         timestamp: new Date()
       };
       
       setMessages(prev => [...prev, newBotMessage]);
-      setIsTyping(false);
       
       setConversations(prev => 
         prev.map(conv => 
           conv.id === activeConversationId 
-            ? {...conv, lastMessage: randomResponse, timestamp: new Date()}
+            ? {...conv, lastMessage: responseText, timestamp: new Date()}
             : conv
         )
       );
-    }, 1500);
+    } catch (error) {
+      console.error('Error getting response from the API:', error);
+      
+      // Fallback message in case of error
+      const errorMessage = {
+        id: (Date.now() + 1).toString(),
+        content: "I'm sorry, I couldn't process your message right now. Please try again later.",
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
+    }
   };
   
   const handleKeyPress = (e) => {
@@ -159,12 +194,13 @@ const ChatInterface = ({ initialModel = 'mom', showSidebar = true, toggleSidebar
     }, 100);
   };
   
-  const loadConversation = (conversationId) => {
+  const loadConversation = async (conversationId) => {
     setActiveConversationId(conversationId);
     
     const selectedConversation = conversations.find(c => c.id === conversationId);
     
-    // Generate mock messages based on the selected conversation
+    // In a real implementation, you would fetch actual conversation history from the backend
+    // For now, we'll use mock data but with the first and last messages from the actual conversation
     const mockMessages = [
       {
         id: '1',

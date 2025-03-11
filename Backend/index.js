@@ -21,7 +21,7 @@ app.use(express.json());
 //     }
 //   });
 
-app.use('/api/content', contentRoutes);
+app.use('/api/model', contentRoutes);
 
 
 const PORT = process.env.PORT || 5000;
