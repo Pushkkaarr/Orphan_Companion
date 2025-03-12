@@ -80,7 +80,7 @@ const ChatInterface = ({ initialModel = 'mom', showSidebar = true, toggleSidebar
       'mom': 'mother',
       'dad': 'father',
       'bro': 'bro',
-      'grandparent': 'grandparent'
+      'sister': 'sister'
     };
     
     return modelEndpoints[modelName] || 'father'; // Default to father if not found

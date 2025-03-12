@@ -30,8 +30,8 @@ const models = [
     previewMessage: "Hey! What's up? Tell me what's going on in your world."
   },
   {
-    role: "Grandparent",
-    name: "Eleanor",
+    role: "Sister",
+    name: "priya",
     description: "Patient, full of stories, and offering the wisdom that comes with life experience.",
     color: "bg-[#D6A2E8]",
     traits: ["Patient", "Wise", "Compassionate"],

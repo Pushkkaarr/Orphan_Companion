@@ -6,7 +6,7 @@ const cors = require('cors');
 const contentRoutes = require('./routes/fatherRoutes');
 const motherRoutes = require('./routes/motherRoute');
 const brotherRoutes = require('./routes/brotherRoutes');
-
+const sisterRoutes = require('./routes/sisterRoutes');
 dotenv.config();
 
 const app = express();
@@ -25,6 +25,7 @@ app.use(express.json());
 app.use('/api/model', contentRoutes);
 app.use('/api/model',motherRoutes);
 app.use('/api', brotherRoutes);
+app.use("/api",sisterRoutes);
 
 const PORT = process.env.PORT || 5000;
 
