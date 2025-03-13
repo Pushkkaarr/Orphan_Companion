@@ -42,18 +42,20 @@ export const modelResponses = {
       pitch: 0.9,
       accent: 'Indian'
     },
-    sibling: {
-      name: 'Young Indian voice',
-      rate: 1.0,
-      pitch: 1.05,
-      accent: 'Indian'
-    },
-    grandparent: {
-      name: 'Elder Indian voice',
-      rate: 0.8,
-      pitch: 1.0,
-      accent: 'Indian'
-    }
+    // sibling: {
+    //   name: 'Young Indian voice',
+    //   rate: 1.0,
+    //   pitch: 1.05,
+    //   accent: 'Indian'
+    // },
+    sibling:{ pitch: 0.5, rate: 1.4, volume: 1, name: "Young Indian Male" },
+    // grandparent: {
+    //   name: 'Elder Indian voice',
+    //   rate: 0.8,
+    //   pitch: 1.0,
+    //   accent: 'Indian'
+    // }
+    grandparent: { pitch: 1, rate: 1.1, volume: 1, name: "Young Indian Female" }
   };
   
   export const welcomeMessages = {
