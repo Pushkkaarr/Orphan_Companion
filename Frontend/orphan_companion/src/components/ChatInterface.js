@@ -6,6 +6,10 @@ import ChatHeader from './ChatHeader';
 import ChatMessages from './ChatMessages';
 import ChatInput from './ChatInput';
 import { welcomeMessages, voiceConfigs } from '../utlis/chatUtils';
+import dotenv from 'dotenv';
+dotenv.config();
+
+
 
 const ChatInterface = ({ initialModel = 'mom', showSidebar = true, toggleSidebar = () => {} }) => {
   const [selectedModel, setSelectedModel] = useState(initialModel);
@@ -116,8 +120,12 @@ const ChatInterface = ({ initialModel = 'mom', showSidebar = true, toggleSidebar
     try {
       // Determine which API to call based on the selected model
       const modelEndpoint = getModelEndpoint(selectedModel);
-      const apiUrl = `http://localhost:5000/api/model/${modelEndpoint}`;
+      console.log('Backend URL:', process.env.NEXT_PUBLIC_BACKEND_URL);
+
+      const apiUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/model/${modelEndpoint}`;
+
       
+      console.log(apiUrl)
       // Make the API call to the backend
       const response = await axios.post(apiUrl, {
         message: inputValue
