@@ -2,9 +2,9 @@
 'use client';
 
 import React from 'react';
-import AudioMessage from './AudioMessage';
-import IndianMaleAudioMessage from './IndianMaleAudioMessage'; // Import the new component
-import IndianFemaleAudioMessage from "./IndianFemaleAudioMessage";
+import AudioMessage from './../AudioMessage';
+import IndianMaleAudioMessage from './../IndianMaleAudioMessage'; // Import the new component
+import IndianFemaleAudioMessage from "./../IndianFemaleAudioMessage";
 
 const MessageBubble = ({
   message,

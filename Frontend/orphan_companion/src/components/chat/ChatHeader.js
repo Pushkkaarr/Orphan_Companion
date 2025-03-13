@@ -1,7 +1,7 @@
 'use client';
 
 import { AlignJustify, Sun, Moon, Volume2, VolumeX } from 'lucide-react';
-import ModelSelector from './ModelSelector';
+import ModelSelector from '../ModelSelector';
 
 const ChatHeader = ({
   selectedModel,

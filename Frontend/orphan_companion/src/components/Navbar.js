@@ -19,9 +19,7 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const isActive = (path) => {
-    return pathname === path;
-  };
+  const isActive = (path) => pathname === path;
 
   return (
     <header
@@ -31,8 +29,11 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-6 md:px-12">
         <div className="flex items-center justify-between">
+          {/* Logo */}
           <Link href="/" className="flex items-center">
-            <span className="text-2xl font-display font-bold text-family-deep-blue">Family<span className="text-family-accent">Connect</span></span>
+            <span className="text-2xl font-display font-bold text-family-deep-blue">
+              Family<span className="text-family-accent">Connect</span>
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -40,18 +41,24 @@ const Navbar = () => {
             <Link href="/" className={`nav-link ${isActive('/') ? 'active' : ''}`}>
               Home
             </Link>
-            <Link href="/About" className={`nav-link ${isActive('/About') ? 'active' : ''}`}>
+            <Link href="/About" className={`nav-link ${isActive('/about') ? 'active' : ''}`}>
               About
             </Link>
-            <Link href="/Models" className={`nav-link ${isActive('/Models') ? 'active' : ''}`}>
+            <Link href="/Models" className={`nav-link ${isActive('/models') ? 'active' : ''}`}>
               Family Models
+            </Link>
+            <Link href="/Donation" className={`nav-link ${isActive('/Donation') ? 'active' : ''}`}>
+              Donate
+            </Link>
+            <Link href="/Adoption" className={`nav-link ${isActive('/Adoption') ? 'active' : ''}`}>
+              Adopt
             </Link>
             <Link href="/Models" className="btn-primary">
               Start Chatting
             </Link>
           </nav>
 
-          {/* Mobile menu button */}
+          {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden flex items-center"
@@ -81,7 +88,7 @@ const Navbar = () => {
               <Link
                 href="/About"
                 className={`text-lg py-2 ${
-                  isActive('/About') ? 'text-family-deep-blue font-medium' : 'text-family-text-light'
+                  isActive('/about') ? 'text-family-deep-blue font-medium' : 'text-family-text-light'
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
@@ -90,11 +97,29 @@ const Navbar = () => {
               <Link
                 href="/Models"
                 className={`text-lg py-2 ${
-                  isActive('/Models') ? 'text-family-deep-blue font-medium' : 'text-family-text-light'
+                  isActive('/models') ? 'text-family-deep-blue font-medium' : 'text-family-text-light'
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Family Models
+              </Link>
+              <Link
+                href="/Donation"
+                className={`text-lg py-2 ${
+                  isActive('/Donation') ? 'text-family-deep-blue font-medium' : 'text-family-text-light'
+                }`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Donate
+              </Link>
+              <Link
+                href="/Adoption"
+                className={`text-lg py-2 ${
+                  isActive('/Adoption') ? 'text-family-deep-blue font-medium' : 'text-family-text-light'
+                }`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Adopt
               </Link>
               <Link
                 href="/Models"
