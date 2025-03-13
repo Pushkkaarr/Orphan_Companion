@@ -69,10 +69,10 @@ const IndianMaleAudioMessage = ({ text, voiceConfig, isDarkMode = true }) => {
 
     // Apply voice configuration with adjustments for a more Indian male voice
     if (voiceConfig) {
-      utterance.rate = voiceConfig.rate || 1.0; // Normal rate with slight variation for Indian tone
+      utterance.rate = voiceConfig.rate || 1.5; // Normal rate with slight variation for Indian tone
       utterance.pitch = voiceConfig.pitch || -0.5; // Slightly lower pitch for masculinity
     } else {
-      utterance.rate = 1.0; // Default rate
+      utterance.rate = 1.5; // Default rate
       utterance.pitch = -0.5; // Default pitch for male tone
     }
     utterance.volume = 1.0;
@@ -144,7 +144,7 @@ const IndianMaleAudioMessage = ({ text, voiceConfig, isDarkMode = true }) => {
           </>
         )}
       </button>
-      {voiceConfig && <span className="ml-2 text-xs text-gray-500">(Young Indian Male)</span>}
+      {voiceConfig && <span className="ml-2 text-xs text-gray-500">(Male)</span>}
     </div>
   );
 };

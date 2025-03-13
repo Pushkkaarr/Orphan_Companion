@@ -118,7 +118,7 @@ const IndianFemaleAudioMessage = ({ text, voiceConfig, isDarkMode = true }) => {
           utterance.rate = 1.1; // Fixed rate 1.1 for hi-IN
           utterance.pitch = 1;
         } else {
-          utterance.rate = 1.8; // Fixed rate 1.5 for other languages
+          utterance.rate = 2; // Fixed rate 1.5 for other languages
           utterance.pitch = 1.8;
         }
       } else {
@@ -166,7 +166,7 @@ const IndianFemaleAudioMessage = ({ text, voiceConfig, isDarkMode = true }) => {
           </>
         )}
       </button>
-      {voiceConfig && <span className="ml-2 text-xs text-gray-500">(Young Indian Female)</span>}
+      {voiceConfig && <span className="ml-2 text-xs text-gray-500">(Female)</span>}
     </div>
   );
 };

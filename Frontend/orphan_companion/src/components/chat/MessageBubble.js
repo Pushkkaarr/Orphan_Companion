@@ -70,6 +70,20 @@ const MessageBubble = ({
                     voiceConfig={voiceConfig}
                     isDarkMode={isDarkMode}
                   />
+                ) : selectedModel === "mom" ? (
+                  <IndianFemaleAudioMessage
+                    text={message.content}
+                    messageId={message.id}
+                    voiceConfig={voiceConfig}
+                    isDarkMode={isDarkMode}
+                  />
+                ) : selectedModel === "dad" ? (
+                  <IndianMaleAudioMessage
+                    text={message.content}
+                    messageId={message.id}
+                    voiceConfig={voiceConfig}
+                    isDarkMode={isDarkMode}
+                  />
                 ) : (
                   <AudioMessage
                     text={message.content}

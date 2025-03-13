@@ -30,25 +30,27 @@ export const modelResponses = {
   };
   
   export const voiceConfigs = {
-    mom: {
-      name: 'Indian Female voice',
-      rate: 0.9,
-      pitch: 1.1,
-      accent: 'Indian'
-    },
-    dad: {
-      name: 'Indian Male voice',
-      rate: 0.85,
-      pitch: 0.9,
-      accent: 'Indian'
-    },
+    // mom: {
+    //   name: 'Indian Female voice',
+    //   rate: 0.1,
+    //   pitch: 1.1,
+    //   accent: 'Indian'
+    // },
+    mom: { pitch: 1, rate: 1.1, volume: 1, name: "Young Indian Female" },
+    // dad: {
+    //   name: 'Indian Male voice',
+    //   rate: 0.85,
+    //   pitch: 0.9,
+    //   accent: 'Indian'
+    // },
+    dad: { pitch: 0.1, rate: 1.6, volume: 1, name: "Young Indian Dad" },
     // sibling: {
     //   name: 'Young Indian voice',
     //   rate: 1.0,
     //   pitch: 1.05,
     //   accent: 'Indian'
     // },
-    sibling:{ pitch: 0.5, rate: 1.4, volume: 1, name: "Young Indian Male" },
+    sibling:{ pitch: 0.5, rate: 1.6, volume: 1, name: "Young Indian Male" },
     // grandparent: {
     //   name: 'Elder Indian voice',
     //   rate: 0.8,
