@@ -24,8 +24,8 @@ app.use(express.json());
 
 app.use('/api/model', contentRoutes);
 app.use('/api/model',motherRoutes);
-app.use('/api', brotherRoutes);
-app.use("/api",sisterRoutes);
+app.use('/api/model', brotherRoutes);
+app.use("/api/model",sisterRoutes);
 
 const PORT = process.env.PORT || 5000;
 

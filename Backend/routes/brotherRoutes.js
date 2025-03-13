@@ -4,6 +4,6 @@ const router = express.Router();
 const brotherController = require('../controllers/brotherController');
 
 // Route to generate a response from the brother model
-router.post('/bro', brotherController.generateResponse);
+router.post('/brother', brotherController.generateResponse);
 
 module.exports = router;

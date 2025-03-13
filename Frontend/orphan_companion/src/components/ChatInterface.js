@@ -79,11 +79,11 @@ const ChatInterface = ({ initialModel = 'mom', showSidebar = true, toggleSidebar
     const modelEndpoints = {
       'mom': 'mother',
       'dad': 'father',
-      'bro': 'bro',
-      'sister': 'sister'
+      'sibling': 'brother',
+      'grandparent': 'sister'
     };
     
-    return modelEndpoints[modelName] || 'father'; // Default to father if not found
+    return modelEndpoints[modelName]; // Default to father if not found
   };
   
   const handleSendMessage = async () => {
