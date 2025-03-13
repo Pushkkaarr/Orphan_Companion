@@ -1,37 +1,40 @@
-const fs = require('fs');
+// src/models/db.js
 const { Pool } = require('pg');
-require('dotenv').config();
+const dotenv = require('dotenv');
 
-const sslConfig = process.env.DB_SSL === 'true'
-  ? {
-      rejectUnauthorized: true,
-      ca: fs.readFileSync(process.env.DB_CERT_PATH).toString(), // Load certificate
-    }
-  : false;
+// Load environment variables from .env file
+dotenv.config();
 
+// Configure the connection pool
 const pool = new Pool({
-  user: process.env.DB_USER || 'avnadmin',
-  password: process.env.DB_PASSWORD || 'default_password',
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
-  database: process.env.DB_NAME || 'defaultdb',
-  ssl: sslConfig,
-  connectionTimeoutMillis: 10000, // 10 seconds timeout
-  idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
-  max: 10, // Max connections in the pool
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME,
+  ssl: {
+    rejectUnauthorized: true,
+    ca: process.env.DB_SSL_CA,  // SSL certificate from the environment variable
+  },
 });
 
+// Test the PostgreSQL connection when the app starts
 pool.connect()
   .then(() => {
-    console.log(`✅ Connected to PostgreSQL at ${process.env.DB_HOST}:${process.env.DB_PORT}`);
+    console.log('PostgreSQL connected successfully!');
   })
-  .catch((err) => {
-    console.error(`❌ Failed to connect to PostgreSQL at ${process.env.DB_HOST}:${process.env.DB_PORT}`);
-    console.error('❗ Error Details:', {
-      message: err.message,
-      stack: err.stack,
-    });
-    process.exit(1); // Exit process on failure
+  .catch(err => {
+    console.error('Error connecting to PostgreSQL:', err);
   });
 
-module.exports = pool;
+// Query function for interacting with the database
+const query = async (text, params = []) => {
+  try {
+    return await pool.query(text, params);
+  } catch (err) {
+    console.error('Error executing query', err);
+    throw err;  // Re-throw error after logging
+  }
+};
+
+module.exports = { query, pool };
