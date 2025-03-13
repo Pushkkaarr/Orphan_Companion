@@ -41,10 +41,10 @@ const Navbar = () => {
             <Link href="/" className={`nav-link ${isActive('/') ? 'active' : ''}`}>
               Home
             </Link>
-            <Link href="/About" className={`nav-link ${isActive('/about') ? 'active' : ''}`}>
+            <Link href="/About" className={`nav-link ${isActive('/About') ? 'active' : ''}`}>
               About
             </Link>
-            <Link href="/Models" className={`nav-link ${isActive('/models') ? 'active' : ''}`}>
+            <Link href="/Models" className={`nav-link ${isActive('/Models') ? 'active' : ''}`}>
               Family Models
             </Link>
             <Link href="/Donation" className={`nav-link ${isActive('/Donation') ? 'active' : ''}`}>
