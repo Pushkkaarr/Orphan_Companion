@@ -11,7 +11,8 @@ const models = [
     description: "Warm, nurturing, and always ready with practical advice and unconditional support.",
     color: "bg-[#E8A87C]",
     traits: ["Nurturing", "Compassionate", "Wise"],
-    previewMessage: "How was your day, dear? Would you like to talk about it?"
+    previewMessage: "How was your day, dear? Would you like to talk about it?",
+    modelId: "mom" // Internal model ID for navigation and API mapping
   },
   {
     role: "Dad",
@@ -19,23 +20,26 @@ const models = [
     description: "Thoughtful, protective, with a touch of humor and practical life wisdom.",
     color: "bg-family-deep-blue",
     traits: ["Supportive", "Humorous", "Reliable"],
-    previewMessage: "I'm here if you need any advice or just want to chat about your day."
+    previewMessage: "I'm here if you need any advice or just want to chat about your day.",
+    modelId: "dad" // Internal model ID for navigation and API mapping
   },
   {
-    role: "Brother", //this is where the url changes
+    role: "Brother",
     name: "Alex",
     description: "Fun, relatable, and always ready to listen or offer a different perspective.",
     color: "bg-[#5D9BD5]",
     traits: ["Friendly", "Honest", "Understanding"],
-    previewMessage: "Hey! What's up? Tell me what's going on in your world."
+    previewMessage: "Hey! What's up? Tell me what's going on in your world.",
+    modelId: "sibling" // Map "Brother" to "sibling"
   },
   {
     role: "Sister",
-    name: "priya",
+    name: "Priya",
     description: "Patient, full of stories, and offering the wisdom that comes with life experience.",
     color: "bg-[#D6A2E8]",
     traits: ["Patient", "Wise", "Compassionate"],
-    previewMessage: "Hello, my dear. Would you like to hear a story or share one of your own?"
+    previewMessage: "Hello, my dear. Would you like to hear a story or share one of your own?",
+    modelId: "grandparent" // Map "Sister" to "grandparent"
   }
 ];
 
@@ -79,8 +83,9 @@ const ModelCard = ({ model, index }) => {
           <p className="text-sm italic">"{model.previewMessage}"</p>
         </div>
 
+        {/* Use modelId for navigation instead of role */}
         <Link
-          href={`/ChatBot?model=${model.role.toLowerCase()}`}
+          href={`/ChatBot?model=${model.modelId}`}
           className="text-family-deep-blue font-medium flex items-center gap-1 hover:gap-2 transition-all"
         >
           Chat with {model.name} <ArrowRight className="w-4 h-4" />

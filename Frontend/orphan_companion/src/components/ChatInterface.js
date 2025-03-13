@@ -9,8 +9,6 @@ import { welcomeMessages, voiceConfigs } from '../utlis/chatUtils';
 import dotenv from 'dotenv';
 dotenv.config();
 
-
-
 const ChatInterface = ({ initialModel = 'mom', showSidebar = true, toggleSidebar = () => {} }) => {
   const [selectedModel, setSelectedModel] = useState(initialModel);
   const [messages, setMessages] = useState([]);
@@ -46,14 +44,14 @@ const ChatInterface = ({ initialModel = 'mom', showSidebar = true, toggleSidebar
         title: 'New Video Game',
         lastMessage: "I'll show you how to play it next time I see you.",
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48),
-        model: 'sibling'
+        model: 'sibling' // Use internal model ID
       },
       {
         id: '4',
         title: 'Family Story',
         lastMessage: "That's how your grandfather met your grandmother.",
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 72),
-        model: 'grandparent'
+        model: 'grandparent' // Use internal model ID
       }
     ];
     
@@ -83,11 +81,12 @@ const ChatInterface = ({ initialModel = 'mom', showSidebar = true, toggleSidebar
     const modelEndpoints = {
       'mom': 'mother',
       'dad': 'father',
-      'sibling': 'brother',
-      'grandparent': 'sister'
+      'sibling': 'brother', // Map "sibling" to "brother" endpoint
+      'grandparent': 'sister' // Map "grandparent" to "sister" endpoint
     };
     
-    return modelEndpoints[modelName]; // Default to father if not found
+    // Return the endpoint or default to 'mother' if not found
+    return modelEndpoints[modelName] || 'mother';
   };
   
   const handleSendMessage = async () => {
@@ -123,9 +122,9 @@ const ChatInterface = ({ initialModel = 'mom', showSidebar = true, toggleSidebar
       console.log('Backend URL:', process.env.NEXT_PUBLIC_BACKEND_URL);
 
       const apiUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/model/${modelEndpoint}`;
-
       
-      console.log(apiUrl)
+      console.log('API URL:', apiUrl); // Log the API URL for debugging
+      
       // Make the API call to the backend
       const response = await axios.post(apiUrl, {
         message: inputValue

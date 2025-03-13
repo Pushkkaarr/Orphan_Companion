@@ -7,14 +7,19 @@ import { ArrowLeft } from 'lucide-react';
 const ChatBot = () => {
   const router = useRouter();
   const { model } = router.query; // Get query param from URL
-  const [selectedModel, setSelectedModel] = useState('mom');
+  const [selectedModel, setSelectedModel] = useState(null); // Initialize as null
   const [showSidebar, setShowSidebar] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    // Set selected model from URL
-    if (model && ['mom', 'dad', 'sibling', 'grandparent'].includes(model)) {
-      setSelectedModel(model);
+    // Define valid models (must match internal model IDs)
+    const validModels = ['mom', 'dad', 'sibling', 'grandparent'];
+
+    // Set selected model from URL, default to 'mom' if invalid
+    if (model && validModels.includes(model.toLowerCase())) {
+      setSelectedModel(model.toLowerCase());
+    } else {
+      setSelectedModel('mom'); // Fallback to 'mom' if model is invalid
     }
 
     // Check for dark mode preference
@@ -27,6 +32,11 @@ const ChatBot = () => {
 
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [model]);
+
+  // Don't render ChatInterface until selectedModel is set
+  if (!selectedModel) {
+    return null;
+  }
 
   return (
     <div className={`h-screen flex flex-col ${isDarkMode ? 'bg-[#111b21] text-white' : 'bg-[#f0f2f5] text-[#111b21]'}`}>
