@@ -53,6 +53,9 @@ const Navbar = () => {
             <Link href="/Adoption" className={`nav-link ${isActive('/Adoption') ? 'active' : ''}`}>
               Adopt
             </Link>
+            <Link href="/Community" className={`nav-link ${isActive('/Community') ? 'active' : ''}`}>
+              Community
+            </Link>
             <Link href="/Models" className="btn-primary">
               Start Chatting
             </Link>
