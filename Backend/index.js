@@ -18,10 +18,31 @@ app.get("/", async (req, res) => {
   try {
     const result = await pool.query("SELECT NOW()"); // Simple query to test connection
     res.send(`PostgreSQL connected! Server time is ${result.rows[0].now}`);
+    server.listen(port, () => {
+      console.log(`Server running at http://localhost:${port}`);
+  });
+
+   // The reloader function to keep the server active
+  const url = process.env.B_LINK; // Replace with your Render URL
+  const interval = 30000; // Interval in milliseconds (30 seconds)
+
+  function reloadWebsite() {
+    axios.get(url)
+      .then(response => {
+        console.log(`Reloaded at ${new Date().toISOString()}: Status Code ${response.status}`);
+      })
+      .catch(error => {
+        console.error(`Error reloading at ${new Date().toISOString()}:`, error.message);
+      });
+  }
+
+  // Start the reloader function at the specified interval
+  setInterval(reloadWebsite, interval);
   } catch (err) {
     console.error("Error testing PostgreSQL connection:", err);
     res.status(500).send("Internal Server Error");
   }
+  
 });
 
 app.use(express.json());
