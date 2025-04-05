@@ -3,9 +3,11 @@ import HeroSection from "../components/HeroSection";
 import FeaturesSection from "../components/FeaturesSection";
 import FamilyModels from "../components/FamilyModels";
 import Footer from "../components/Footer";
+import AuthDialog from "../components/AuthDialog";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useElementOnScreen } from "@/lib/animations";
+import { useAuth } from "@/context/AuthContext";
 
 const TestimonialSection = () => {
   const { ref, isVisible } = useElementOnScreen({
@@ -61,6 +63,7 @@ const CallToAction = () => {
     rootMargin: '0px',
     threshold: 0.1
   });
+  const { user } = useAuth();
 
   return (
     <section className="py-20 bg-family-warm">
@@ -73,9 +76,24 @@ const CallToAction = () => {
           <p className="text-lg text-family-text-light mb-8 max-w-xl mx-auto">
             Start chatting with our AI family members today and discover the support and understanding you deserve.
           </p>
-          <Link href="/Models" className="btn-primary inline-flex items-center gap-2">
-            Start Your Conversation <ArrowRight className="w-4 h-4" />
-          </Link>
+          {user ? (
+            <Link href="/Models" className="btn-primary inline-flex items-center gap-2">
+              Start Your Conversation <ArrowRight className="w-4 h-4" />
+            </Link>
+          ) : (
+            <div className="flex flex-col items-center gap-4">
+              <AuthDialog 
+                triggerButtonText="Get Started" 
+                triggerButtonClassName="btn-primary inline-flex items-center gap-2"
+              />
+              <p className="text-sm text-family-text-light">
+                Already have an account? <AuthDialog 
+                  triggerButtonText="Sign In" 
+                  triggerButtonClassName="text-family-accent hover:underline"
+                />
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </section>

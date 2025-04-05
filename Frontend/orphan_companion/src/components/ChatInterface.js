@@ -5,7 +5,7 @@ import ChatHistory from './ChatHistory';
 import ChatHeader from './chat/ChatHeader';
 import ChatMessages from './chat/ChatMessages';
 import ChatInput from './chat/ChatInput';
-import { welcomeMessages, voiceConfigs } from '../utlis/chatUtils';
+import { welcomeMessages, voiceConfigs } from '../utils/chatUtils';
 import dotenv from 'dotenv';
 dotenv.config();
 

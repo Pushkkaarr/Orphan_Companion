@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Mic, MicOff } from 'lucide-react';
-import { useSpeechRecognition } from '../utlis/speechUtils';
+import { useSpeechRecognition } from '../utils/speechUtils';
 
 const VoiceInteraction = ({ 
   onUserMessage, 

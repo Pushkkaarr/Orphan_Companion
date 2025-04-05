@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -10,18 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Calendar, DollarSign, GiftIcon, HandCoins, Heart, Package, PiggyBank, UserPlus } from 'lucide-react';
 import { toast } from "sonner";
+import { createBrowserClient } from '@supabase/ssr';
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-// import { config } from "../config/appConfig";
 
-// Sample wishlist data
-const wishlistItems = [
-  { id: 1, name: "School Uniforms", quantity: 10, category: "Clothes", priority: "High" },
-  { id: 2, name: "Story Books", quantity: 15, category: "Books", priority: "Medium" },
-  { id: 3, name: "Winter Jackets", quantity: 8, category: "Clothes", priority: "High" },
-  { id: 4, name: "Food Supplies", quantity: 20, category: "Food", priority: "Critical" },
-  { id: 5, name: "Toys", quantity: 12, category: "Toys", priority: "Medium" },
-];
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 const DonationPage = () => {
   // Form state
@@ -30,49 +25,148 @@ const DonationPage = () => {
   const [donationFrequency, setDonationFrequency] = useState("one-time");
   const [itemCategory, setItemCategory] = useState("");
   const [itemQuantity, setItemQuantity] = useState("");
-  const [message, setMessage] = useState("");
+  const [itemDescription, setItemDescription] = useState("");
   const [deliveryMethod, setDeliveryMethod] = useState("dropoff");
   const [pickupDate, setPickupDate] = useState("");
   const [pickupAddress, setPickupAddress] = useState("");
+  const [donorName, setDonorName] = useState("");
+  const [donorEmail, setDonorEmail] = useState("");
+  const [donorPhone, setDonorPhone] = useState("");
+  const [selectedRequestId, setSelectedRequestId] = useState(null);
+  
+  // Wishlist items
+  const [wishlistItems, setWishlistItems] = useState([]);
+  const [isLoadingWishlist, setIsLoadingWishlist] = useState(true);
+  const [donationStats, setDonationStats] = useState({
+    monetaryTotal: 0,
+    childrenSupported: 0,
+    physicalItems: 0
+  });
+  
+  useEffect(() => {
+    fetchWishlistItems();
+    fetchDonationStats();
+  }, []);
+  
+  const fetchWishlistItems = async () => {
+    try {
+      setIsLoadingWishlist(true);
+      const { data, error } = await supabase
+        .from('inventory_requests')
+        .select('*')
+        .eq('display_on_wishlist', true)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      setWishlistItems(data || []);
+    } catch (error) {
+      console.error("Error fetching wishlist items:", error);
+      toast.error("Unable to load wishlist items");
+    } finally {
+      setIsLoadingWishlist(false);
+    }
+  };
+  
+  const fetchDonationStats = async () => {
+    try {
+      // These would be real queries in a production app
+      // For now we'll use placeholder values
+      setDonationStats({
+        monetaryTotal: 25480,
+        childrenSupported: 184,
+        physicalItems: 350
+      });
+    } catch (error) {
+      console.error("Error fetching donation stats:", error);
+    }
+  };
   
   // Handle monetary donation
-  const handleMonetaryDonation = (e) => {
+  const handleMonetaryDonation = async (e) => {
     e.preventDefault();
-    // In a real app, we would connect to a payment gateway here
-    // For now, we'll just show a success message
-    toast.success("Thank you for your donation! Redirecting to payment...");
     
-    // Simulate API call with config
-    console.log(`Sending donation request to: /donations`);
+    // In a real app, we would connect to a payment gateway here
+    // and then save the donation to our database
+    
+    toast.success("Thank you for your donation! Redirecting to payment...");
     
     // Reset form
     setDonationAmount("");
-    setMessage("");
+    setItemDescription("");
   };
   
   // Handle physical donation
-  const handlePhysicalDonation = (e) => {
+  const handlePhysicalDonation = async (e) => {
     e.preventDefault();
-    toast.success("Thank you for your donation! We'll be in touch soon.");
     
-    // Reset form
-    setItemCategory("");
-    setItemQuantity("");
-    setMessage("");
-    setDeliveryMethod("dropoff");
-    setPickupDate("");
-    setPickupAddress("");
+    try {
+      // Prepare data based on whether this is a wishlist item or custom donation
+      let donationData = {
+        donor_name: donorName,
+        donor_email: donorEmail,
+        donor_phone: donorPhone,
+        quantity: parseInt(itemQuantity),
+        delivery_method: deliveryMethod,
+        message: itemDescription
+      };
+      
+      // Add pickup info if relevant
+      if (deliveryMethod === "pickup") {
+        donationData.pickup_date = pickupDate;
+        donationData.pickup_address = pickupAddress;
+      }
+      
+      // If this is a pledge for a specific wishlist item
+      if (selectedRequestId) {
+        donationData.inventory_request_id = selectedRequestId;
+        
+        // Save to donation_pledges table
+        const { error } = await supabase
+          .from('donation_pledges')
+          .insert([donationData]);
+          
+        if (error) throw error;
+      } else {
+        // This is a custom donation - we could save it to a different table
+        // For now, just simulate success
+        console.log("Custom donation:", {
+          category: itemCategory,
+          quantity: itemQuantity,
+          description: itemDescription,
+          ...donationData
+        });
+      }
+      
+      toast.success("Thank you for your donation! We'll be in touch soon.");
+      
+      // Reset form
+      setItemCategory("");
+      setItemQuantity("");
+      setItemDescription("");
+      setDeliveryMethod("dropoff");
+      setPickupDate("");
+      setPickupAddress("");
+      setDonorName("");
+      setDonorEmail("");
+      setDonorPhone("");
+      setSelectedRequestId(null);
+    } catch (error) {
+      console.error("Error submitting donation:", error);
+      toast.error("There was a problem submitting your donation. Please try again.");
+    }
   };
   
   // Handle wishlist fulfillment
-  const handleWishlistFulfill = (itemId) => {
-    const item = wishlistItems.find(item => item.id === itemId);
+  const handleWishlistFulfill = (item) => {
     if (item) {
       setItemCategory(item.category);
-      setItemQuantity(item.quantity.toString());
+      setItemQuantity(item.quantity_needed.toString());
+      setItemDescription(`I'm donating for the requested "${item.item_name}"`);
+      setSelectedRequestId(item.id);
       setDonationType("physical");
       
-      toast.info(`You're fulfilling: ${item.quantity} ${item.name}`);
+      toast.info(`You're fulfilling: ${item.quantity_needed} ${item.item_name}`);
       
       // Scroll to the physical donation form
       document.getElementById("physical-donation-form")?.scrollIntoView({ behavior: "smooth" });
@@ -118,7 +212,7 @@ const DonationPage = () => {
               <Card className="text-center glass-panel">
                 <CardHeader>
                   <DollarSign className="w-10 h-10 mx-auto text-family-accent" />
-                  <CardTitle>$25,480</CardTitle>
+                  <CardTitle>${donationStats.monetaryTotal.toLocaleString()}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-family-text-light">Total Donations Received</p>
@@ -128,7 +222,7 @@ const DonationPage = () => {
               <Card className="text-center glass-panel">
                 <CardHeader>
                   <UserPlus className="w-10 h-10 mx-auto text-family-accent" />
-                  <CardTitle>184</CardTitle>
+                  <CardTitle>{donationStats.childrenSupported}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-family-text-light">Children Supported</p>
@@ -138,7 +232,7 @@ const DonationPage = () => {
               <Card className="text-center glass-panel">
                 <CardHeader>
                   <Package className="w-10 h-10 mx-auto text-family-accent" />
-                  <CardTitle>350+</CardTitle>
+                  <CardTitle>{donationStats.physicalItems}+</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-family-text-light">Physical Items Donated</p>
@@ -225,8 +319,8 @@ const DonationPage = () => {
                           <Textarea
                             id="message"
                             placeholder="Add a message to your donation"
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
+                            value={itemDescription}
+                            onChange={(e) => setItemDescription(e.target.value)}
                           />
                         </div>
                       </div>
@@ -245,104 +339,158 @@ const DonationPage = () => {
                     <CardTitle>Physical Donation</CardTitle>
                     <CardDescription>
                       Donate clothes, books, food, and other essentials to help our children.
+                      {selectedRequestId && (
+                        <p className="text-sm font-medium mt-2 text-primary">
+                          You're fulfilling a wishlist item
+                        </p>
+                      )}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={handlePhysicalDonation}>
                       <div className="space-y-6">
-                        <div>
-                          <Label htmlFor="item-category">Item Category</Label>
-                          <Select 
-                            value={itemCategory} 
-                            onValueChange={setItemCategory}
-                            required
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="clothes">Clothes</SelectItem>
-                              <SelectItem value="books">Books</SelectItem>
-                              <SelectItem value="food">Food</SelectItem>
-                              <SelectItem value="toys">Toys</SelectItem>
-                              <SelectItem value="stationery">Stationery</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
+                        {/* Donor Information */}
+                        <div className="space-y-4">
+                          <h3 className="text-lg font-medium">Your Information</h3>
+                          
+                          <div>
+                            <Label htmlFor="donor-name">Name *</Label>
+                            <Input
+                              id="donor-name"
+                              placeholder="Your name"
+                              value={donorName}
+                              onChange={(e) => setDonorName(e.target.value)}
+                              required
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="donor-email">Email *</Label>
+                            <Input
+                              id="donor-email"
+                              type="email"
+                              placeholder="Your email"
+                              value={donorEmail}
+                              onChange={(e) => setDonorEmail(e.target.value)}
+                              required
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="donor-phone">Phone (Optional)</Label>
+                            <Input
+                              id="donor-phone"
+                              placeholder="Your phone number"
+                              value={donorPhone}
+                              onChange={(e) => setDonorPhone(e.target.value)}
+                            />
+                          </div>
                         </div>
                         
-                        <div>
-                          <Label htmlFor="item-quantity">Quantity</Label>
-                          <Input
-                            id="item-quantity"
-                            type="number"
-                            placeholder="Enter quantity"
-                            value={itemQuantity}
-                            onChange={(e) => setItemQuantity(e.target.value)}
-                            required
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="message">Item Description</Label>
-                          <Textarea
-                            id="message"
-                            placeholder="Describe the items you're donating"
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            required
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label>Delivery Method</Label>
-                          <RadioGroup 
-                            className="grid grid-cols-2 gap-4 mt-2"
-                            value={deliveryMethod}
-                            onValueChange={setDeliveryMethod}
-                          >
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="dropoff" id="dropoff" />
-                              <Label htmlFor="dropoff">Drop-off</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="pickup" id="pickup" />
-                              <Label htmlFor="pickup">Request Pickup</Label>
-                            </div>
-                          </RadioGroup>
-                        </div>
-                        
-                        {deliveryMethod === "pickup" && (
-                          <>
+                        {/* Donation Details */}
+                        <div className="space-y-4">
+                          <h3 className="text-lg font-medium">Donation Details</h3>
+                          
+                          {!selectedRequestId && (
                             <div>
-                              <Label htmlFor="pickup-date">Preferred Pickup Date</Label>
-                              <div className="relative mt-1">
-                                <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-                                  <Calendar className="w-5 h-5 text-gray-400" />
+                              <Label htmlFor="item-category">Item Category *</Label>
+                              <Select 
+                                value={itemCategory} 
+                                onValueChange={setItemCategory}
+                                required
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Clothes">Clothes</SelectItem>
+                                  <SelectItem value="Books">Books</SelectItem>
+                                  <SelectItem value="Food">Food</SelectItem>
+                                  <SelectItem value="Toys">Toys</SelectItem>
+                                  <SelectItem value="Stationery">Stationery</SelectItem>
+                                  <SelectItem value="Other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                          
+                          <div>
+                            <Label htmlFor="item-quantity">Quantity *</Label>
+                            <Input
+                              id="item-quantity"
+                              type="number"
+                              placeholder="Enter quantity"
+                              value={itemQuantity}
+                              onChange={(e) => setItemQuantity(e.target.value)}
+                              required
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="item-description">Item Description *</Label>
+                            <Textarea
+                              id="item-description"
+                              placeholder="Describe the items you're donating"
+                              value={itemDescription}
+                              onChange={(e) => setItemDescription(e.target.value)}
+                              required
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Delivery Details */}
+                        <div className="space-y-4">
+                          <h3 className="text-lg font-medium">Delivery Method</h3>
+                          
+                          <div>
+                            <RadioGroup 
+                              className="grid grid-cols-2 gap-4 mt-2"
+                              value={deliveryMethod}
+                              onValueChange={setDeliveryMethod}
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="dropoff" id="dropoff" />
+                                <Label htmlFor="dropoff">Drop-off</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="pickup" id="pickup" />
+                                <Label htmlFor="pickup">Request Pickup</Label>
+                              </div>
+                            </RadioGroup>
+                          </div>
+                          
+                          {deliveryMethod === "pickup" && (
+                            <>
+                              <div>
+                                <Label htmlFor="pickup-date">Preferred Pickup Date *</Label>
+                                <div className="relative mt-1">
+                                  <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <Calendar className="w-5 h-5 text-gray-400" />
+                                  </div>
+                                  <Input
+                                    id="pickup-date"
+                                    type="date"
+                                    className="pl-10"
+                                    value={pickupDate}
+                                    onChange={(e) => setPickupDate(e.target.value)}
+                                    required
+                                  />
                                 </div>
-                                <Input
-                                  id="pickup-date"
-                                  type="date"
-                                  className="pl-10"
-                                  value={pickupDate}
-                                  onChange={(e) => setPickupDate(e.target.value)}
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor="pickup-address">Pickup Address *</Label>
+                                <Textarea
+                                  id="pickup-address"
+                                  placeholder="Enter your address for pickup"
+                                  value={pickupAddress}
+                                  onChange={(e) => setPickupAddress(e.target.value)}
                                   required
                                 />
                               </div>
-                            </div>
-                            
-                            <div>
-                              <Label htmlFor="pickup-address">Pickup Address</Label>
-                              <Textarea
-                                id="pickup-address"
-                                placeholder="Enter your address for pickup"
-                                value={pickupAddress}
-                                onChange={(e) => setPickupAddress(e.target.value)}
-                                required
-                              />
-                            </div>
-                          </>
-                        )}
+                            </>
+                          )}
+                        </div>
                       </div>
                       
                       <Button type="submit" className="w-full mt-6">
@@ -366,44 +514,70 @@ const DonationPage = () => {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {wishlistItems.map((item) => (
-                <Card key={item.id} className="glass-panel">
-                  <CardHeader className="relative pb-2">
-                    {item.priority === "Critical" && (
-                      <div className="absolute top-2 right-2">
-                        <div className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium flex items-center">
-                          <AlertCircle className="w-3 h-3 mr-1" />
-                          Urgent Need
+            {isLoadingWishlist ? (
+              <div className="text-center py-12">
+                <p>Loading wishlist items...</p>
+              </div>
+            ) : wishlistItems.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-family-text-light">No items on the wishlist at this time. Please check back later.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {wishlistItems.map((item) => (
+                  <Card key={item.id} className="glass-panel">
+                    <CardHeader className="relative pb-2">
+                      {item.priority === "Critical" && (
+                        <div className="absolute top-2 right-2">
+                          <div className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium flex items-center">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            Urgent Need
+                          </div>
                         </div>
+                      )}
+                      <CardTitle className="text-xl">{item.item_name}</CardTitle>
+                      <CardDescription>{item.category}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <p>Quantity needed: <span className="font-medium">{item.quantity_needed - item.quantity_fulfilled} {item.unit}</span></p>
+                        {item.description && (
+                          <p className="text-sm text-family-text-light">{item.description}</p>
+                        )}
+                        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                          <div 
+                            className="bg-blue-600 h-1.5 rounded-full" 
+                            style={{ width: `${Math.min(100, Math.round((item.quantity_fulfilled / item.quantity_needed) * 100))}%` }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>{item.quantity_fulfilled} fulfilled</span>
+                          <span>{item.quantity_needed} needed</span>
+                        </div>
+                        <p className="text-sm text-family-text-light mt-2">
+                          Priority: <span className={`font-medium ${
+                            item.priority === "Critical" ? "text-red-600" : 
+                            item.priority === "High" ? "text-orange-600" : 
+                            "text-blue-600"
+                          }`}>{item.priority}</span>
+                        </p>
                       </div>
-                    )}
-                    <CardTitle className="text-xl">{item.name}</CardTitle>
-                    <CardDescription>{item.category}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p>Quantity needed: <span className="font-medium">{item.quantity}</span></p>
-                    <p className="text-sm text-family-text-light mt-2">
-                      Priority: <span className={`font-medium ${
-                        item.priority === "Critical" ? "text-red-600" : 
-                        item.priority === "High" ? "text-orange-600" : 
-                        "text-blue-600"
-                      }`}>{item.priority}</span>
-                    </p>
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      variant="outline" 
-                      className="w-full flex items-center justify-center gap-2"
-                      onClick={() => handleWishlistFulfill(item.id)}
-                    >
-                      <Heart className="w-4 h-4" />
-                      <span>Fulfill This Need</span>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button 
+                        variant="outline" 
+                        className="w-full flex items-center justify-center gap-2"
+                        onClick={() => handleWishlistFulfill(item)}
+                        disabled={item.quantity_fulfilled >= item.quantity_needed}
+                      >
+                        <Heart className="w-4 h-4" />
+                        <span>{item.quantity_fulfilled >= item.quantity_needed ? "Need Fulfilled" : "Fulfill This Need"}</span>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </main>

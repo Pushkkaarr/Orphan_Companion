@@ -3,8 +3,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import { LockKeyhole, User } from "lucide-react";
+import { User, LockKeyhole } from "lucide-react";
 
 const AdminLogin = ({ onLogin }) => {
   const [username, setUsername] = useState("");
@@ -24,14 +23,12 @@ const AdminLogin = ({ onLogin }) => {
     setIsLoading(true);
     
     try {
-      const success = onLogin(username, password);
+      const success = await onLogin(username, password);
       if (!success) {
         setError("Invalid username or password");
-        toast.error("Invalid username or password");
       }
     } catch (err) {
       setError("An error occurred. Please try again.");
-      toast.error("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }

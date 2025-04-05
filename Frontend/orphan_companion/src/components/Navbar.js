@@ -3,12 +3,25 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, User, LogOut } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import AuthDialog from './AuthDialog';
+import { Button } from './ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from './ui/dropdown-menu';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,6 +33,16 @@ const Navbar = () => {
   }, []);
 
   const isActive = (path) => pathname === path;
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
+  // Function to get user's initials for avatar
+  const getUserInitials = () => {
+    if (!user || !user.email) return '?';
+    return user.email.charAt(0).toUpperCase();
+  };
 
   return (
     <header
@@ -56,9 +79,35 @@ const Navbar = () => {
             <Link href="/Community" className={`nav-link ${isActive('/Community') ? 'active' : ''}`}>
               Community
             </Link>
-            <Link href="/Models" className="btn-primary">
-              Start Chatting
-            </Link>
+            
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative w-10 h-10 rounded-full">
+                    <Avatar>
+                      <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <AuthDialog 
+                triggerButtonClassName="btn-primary"
+                triggerButtonText="Login / Sign Up"
+              />
+            )}
           </nav>
 
           {/* Mobile Menu Button */}
@@ -124,13 +173,21 @@ const Navbar = () => {
               >
                 Adopt
               </Link>
-              <Link
-                href="/Models"
-                className="btn-primary text-center mt-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Start Chatting
-              </Link>
+              
+              {user ? (
+                <Button 
+                  variant="destructive"
+                  className="mt-4"
+                  onClick={handleSignOut}
+                >
+                  Log Out
+                </Button>
+              ) : (
+                <AuthDialog 
+                  triggerButtonClassName="w-full btn-primary text-center mt-4"
+                  triggerButtonText="Login / Sign Up"
+                />
+              )}
             </div>
           </nav>
         )}
