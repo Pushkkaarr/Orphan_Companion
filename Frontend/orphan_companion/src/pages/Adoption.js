@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -7,66 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowRight, BadgeCheck, Calendar, Eye, GraduationCap, HandHeart, Heart, MessageCircle, UserCheck, UserPlus } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Calendar, Eye, GraduationCap, HandHeart, Heart, Loader2, MessageCircle, UserCheck, UserPlus } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { createBrowserClient } from '@supabase/ssr';
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 // import { config } from "../config/appConfig";
 
-// Sample child data
-const childrenData = [
-  { 
-    id: 1, 
-    name: "Aisha", 
-    age: 7, 
-    gender: "Female", 
-    image: "https://images.unsplash.com/photo-1606264465088-81934a4df99d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-    story: "Aisha loves drawing and has a warm smile. She hopes to become a doctor one day and help others.",
-    education: "Grade 2",
-    hobbies: "Drawing, singing, reading",
-    health: "Excellent",
-    sponsor: null
-  },
-  { 
-    id: 2, 
-    name: "Rahul", 
-    age: 9, 
-    gender: "Male", 
-    image: "https://images.unsplash.com/photo-1601807576163-587225545555?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-    story: "Rahul is passionate about cricket and mathematics. He's always eager to learn new things.",
-    education: "Grade 4",
-    hobbies: "Cricket, puzzles, mathematics",
-    health: "Good",
-    sponsor: null
-  },
-  { 
-    id: 3, 
-    name: "Priya", 
-    age: 5, 
-    gender: "Female", 
-    image: "https://images.unsplash.com/photo-1505937333619-5f1be76f54a9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-    story: "Priya is a quiet but cheerful girl who loves animals. She enjoys listening to stories and playing with dolls.",
-    education: "Kindergarten",
-    hobbies: "Drawing, playing with dolls, listening to stories",
-    health: "Good",
-    sponsor: "John D."
-  },
-  { 
-    id: 4, 
-    name: "Arjun", 
-    age: 11, 
-    gender: "Male", 
-    image: "https://images.unsplash.com/photo-1618848810610-e1707789d8ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
-    story: "Arjun is a bright student who loves science. He dreams of becoming an astronaut and exploring space.",
-    education: "Grade 6",
-    hobbies: "Reading science books, building models, playing football",
-    health: "Excellent",
-    sponsor: null
-  },
-];
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 // Sample progress data
 const progressData = [
@@ -80,6 +34,8 @@ const AdoptionPage = () => {
   // Form state
   const [adoptionType, setAdoptionType] = useState("virtual");
   const [selectedChild, setSelectedChild] = useState(null);
+  const [childrenData, setChildrenData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -91,6 +47,51 @@ const AdoptionPage = () => {
     sponsorshipDuration: "",
     message: ""
   });
+  
+  // Define default photo at the component level
+  const defaultPhoto = 'https://images.unsplash.com/photo-1603415526960-f7e0328c63b1?q=80&w=1470&auto=format&fit=crop';
+
+  // Fetch children data from Supabase
+  useEffect(() => {
+    fetchChildren();
+  }, []);
+
+  const fetchChildren = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('children')
+        .select('*')
+        .in('status', ['Available'])
+        .eq('has_sponsor', false)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      // Transform data to match the structure used in the component
+      const transformedData = data.map(child => ({
+        id: child.id,
+        name: child.full_name,
+        age: child.age,
+        gender: child.gender,
+        image: child.photo_url || defaultPhoto,
+        story: child.background || 'No background information available',
+        education: child.education_level || 'Not specified',
+        hobbies: Array.isArray(child.interests) ? child.interests.join(', ') : (child.interests || 'Not specified'),
+        health: child.health_status || 'Not specified',
+        special_needs: child.special_needs,
+        special_needs_details: child.special_needs_details,
+        sponsor: child.sponsor_name
+      }));
+
+      setChildrenData(transformedData);
+    } catch (error) {
+      console.error("Error fetching children:", error);
+      toast.error("Unable to load children data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   // Change handler
   const handleChange = (e) => {
@@ -104,7 +105,7 @@ const AdoptionPage = () => {
   };
   
   // Handle full adoption application
-  const handleFullAdoptionSubmit = (e) => {
+  const handleFullAdoptionSubmit = async (e) => {
     e.preventDefault();
     
     if (!selectedChild) {
@@ -112,49 +113,121 @@ const AdoptionPage = () => {
       return;
     }
     
-    // In a real app, we would send this to the backend
-    console.log(`Sending adoption request to: /adoptions/full`);
-    toast.success("Your adoption application has been submitted! Our team will contact you soon.");
-    
-    // Reset form
-    setFormData({
-      fullName: "",
-      email: "",
-      phone: "",
-      address: "",
-      financialInfo: "",
-      sponsorshipAmount: "",
-      sponsorshipDuration: "",
-      message: ""
-    });
-    setSelectedChild(null);
+    try {
+      const selectedChildData = getSelectedChildData();
+      
+      // Save adoption application data to Supabase
+      const { error } = await supabase
+        .from('adoption_applications')
+        .insert([{
+          child_id: selectedChild,
+          applicant_name: formData.fullName,
+          applicant_email: formData.email,
+          applicant_phone: formData.phone,
+          address: formData.address,
+          financial_info: formData.financialInfo,
+          reason: formData.message,
+          status: 'Pending Review',
+          application_date: new Date().toISOString()
+        }]);
+
+      if (error) throw error;
+      
+      // Update the child's status in the children table
+      const { error: updateError } = await supabase
+        .from('children')
+        .update({ 
+          status: 'In Adoption Process' 
+        })
+        .eq('id', selectedChild);
+      
+      if (updateError) throw updateError;
+
+      toast.success(`Your adoption application for ${selectedChildData.name} has been submitted! Our team will contact you soon.`);
+      
+      // Reset form
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        address: "",
+        financialInfo: "",
+        sponsorshipAmount: "",
+        sponsorshipDuration: "",
+        message: ""
+      });
+      setSelectedChild(null);
+      
+      // Refresh children data to show updated status
+      fetchChildren();
+    } catch (error) {
+      console.error("Error submitting adoption application:", error);
+      toast.error("There was a problem with your application. Please try again.");
+    }
   };
   
   // Handle virtual adoption application
-  const handleVirtualAdoptionSubmit = (e) => {
+  const handleVirtualAdoptionSubmit = async (e) => {
     e.preventDefault();
     
     if (!selectedChild) {
       toast.error("Please select a child first");
       return;
     }
-    
-    // In a real app, we would send this to the backend
-    console.log(`Sending virtual adoption request to: /adoptions/virtual`);
-    toast.success("Thank you for your sponsorship! You'll receive details about your sponsored child soon.");
-    
-    // Reset form
-    setFormData({
-      fullName: "",
-      email: "",
-      phone: "",
-      address: "",
-      financialInfo: "",
-      sponsorshipAmount: "",
-      sponsorshipDuration: "",
-      message: ""
-    });
-    setSelectedChild(null);
+
+    try {
+      const selectedChildData = getSelectedChildData();
+      
+      // Save sponsorship data to Supabase
+      const { error } = await supabase
+        .from('sponsorships')
+        .insert([{
+          child_id: selectedChild,
+          sponsor_name: formData.fullName,
+          sponsor_email: formData.email,
+          sponsor_phone: formData.phone,
+          monthly_amount: parseFloat(formData.sponsorshipAmount),
+          duration_months: formData.sponsorshipDuration === 'ongoing' ? null : parseInt(formData.sponsorshipDuration),
+          is_ongoing: formData.sponsorshipDuration === 'ongoing',
+          message: formData.message,
+          status: 'Active',
+          start_date: new Date().toISOString()
+        }]);
+
+      if (error) throw error;
+      
+      // Also update the child's sponsor status in the children table
+      const { error: updateError } = await supabase
+        .from('children')
+        .update({ 
+          has_sponsor: true,
+          sponsor_name: formData.fullName
+        })
+        .eq('id', selectedChild);
+      
+      if (updateError) throw updateError;
+
+      toast.success(`Thank you for sponsoring ${selectedChildData.name}! You'll receive details about your sponsored child soon.`);
+      
+      // Reset form
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        address: "",
+        financialInfo: "",
+        sponsorshipAmount: "",
+        sponsorshipDuration: "",
+        message: ""
+      });
+      setSelectedChild(null);
+      
+      // Refresh children data to show updated sponsorship status
+      fetchChildren();
+    } catch (error) {
+      console.error("Error submitting sponsorship:", error);
+      toast.error("There was a problem with your sponsorship. Please try again.");
+    }
   };
   
   // Select a child
@@ -255,101 +328,134 @@ const AdoptionPage = () => {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {childrenData.map((child) => (
-                <Card key={child.id} className="glass-panel overflow-hidden">
-                  <div className="relative h-48 overflow-hidden">
-                    <img 
-                      src={child.image} 
-                      alt={child.name}
-                      className="w-full h-full object-cover"
-                    />
-                    {child.sponsor && (
-                      <div className="absolute top-2 right-2 bg-family-accent text-white px-2 py-1 rounded-full text-xs font-medium flex items-center">
-                        <BadgeCheck className="w-3 h-3 mr-1" />
-                        Sponsored
-                      </div>
-                    )}
-                  </div>
-                  <CardHeader className="pb-2">
-                    <CardTitle>{child.name}, {child.age}</CardTitle>
-                    <CardDescription>{child.gender}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pb-2">
-                    <p className="text-sm line-clamp-3">{child.story}</p>
-                  </CardContent>
-                  <CardFooter className="flex justify-between pt-0">
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="flex items-center gap-1">
-                          <Eye className="w-3 h-3" />
-                          <span>View Profile</span>
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent className="max-w-md">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle className="flex items-center gap-2">
-                            {child.name}, {child.age}
-                            {child.sponsor && (
-                              <span className="bg-family-accent text-white px-2 py-1 rounded-full text-xs font-medium flex items-center">
-                                <BadgeCheck className="w-3 h-3 mr-1" />
-                                Sponsored by {child.sponsor}
-                              </span>
-                            )}
-                          </AlertDialogTitle>
-                        </AlertDialogHeader>
-                        <div className="grid grid-cols-3 gap-4 mb-4">
-                          <div className="col-span-1">
-                            <img 
-                              src={child.image} 
-                              alt={child.name}
-                              className="w-full h-auto rounded-md"
-                            />
-                          </div>
-                          <div className="col-span-2">
-                            <h4 className="font-medium text-sm">About {child.name}</h4>
-                            <p className="text-sm text-family-text-light mb-2">{child.story}</p>
-                            <div className="space-y-1 text-sm">
-                              <p><span className="font-medium">Education:</span> {child.education}</p>
-                              <p><span className="font-medium">Hobbies:</span> {child.hobbies}</p>
-                              <p><span className="font-medium">Health:</span> {child.health}</p>
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+                <p className="text-lg text-family-text-light">Loading children profiles...</p>
+              </div>
+            ) : childrenData.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-xl text-family-text-light mb-4">No children profiles available at the moment.</p>
+                <p className="text-family-text-light">Please check back later or contact our office for more information.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {childrenData.map((child) => (
+                  <Card key={child.id} className="glass-panel overflow-hidden">
+                    <div className="relative h-48 overflow-hidden">
+                      <img 
+                        src={child.image} 
+                        alt={child.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = defaultPhoto;
+                        }}
+                      />
+                      {child.sponsor && (
+                        <div className="absolute top-2 right-2 bg-family-accent text-white px-2 py-1 rounded-full text-xs font-medium flex items-center">
+                          <BadgeCheck className="w-3 h-3 mr-1" />
+                          Sponsored
+                        </div>
+                      )}
+                      {child.special_needs && (
+                        <div className="absolute top-2 left-2 bg-amber-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                          Special Needs
+                        </div>
+                      )}
+                    </div>
+                    <CardHeader className="pb-2">
+                      <CardTitle>{child.name}, {child.age}</CardTitle>
+                      <CardDescription>{child.gender}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <p className="text-sm line-clamp-3">{child.story}</p>
+                    </CardContent>
+                    <CardFooter className="flex justify-between pt-0">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="flex items-center gap-1">
+                            <Eye className="w-3 h-3" />
+                            <span>View Profile</span>
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="max-w-md">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2">
+                              {child.name}, {child.age}
+                              {child.sponsor && (
+                                <span className="bg-family-accent text-white px-2 py-1 rounded-full text-xs font-medium flex items-center">
+                                  <BadgeCheck className="w-3 h-3 mr-1" />
+                                  Sponsored by {child.sponsor}
+                                </span>
+                              )}
+                              {child.special_needs && (
+                                <span className="bg-amber-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                                  Special Needs
+                                </span>
+                              )}
+                            </AlertDialogTitle>
+                          </AlertDialogHeader>
+                          <div className="grid grid-cols-3 gap-4 mb-4">
+                            <div className="col-span-1">
+                              <img 
+                                src={child.image} 
+                                alt={child.name}
+                                className="w-full h-auto rounded-md"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = defaultPhoto;
+                                }}
+                              />
+                            </div>
+                            <div className="col-span-2">
+                              <h4 className="font-medium text-sm">About {child.name}</h4>
+                              <p className="text-sm text-family-text-light mb-2">{child.story}</p>
+                              <div className="space-y-1 text-sm">
+                                <p><span className="font-medium">Education:</span> {child.education}</p>
+                                <p><span className="font-medium">Hobbies:</span> {child.hobbies}</p>
+                                <p><span className="font-medium">Health:</span> {child.health}</p>
+                                {child.special_needs && child.special_needs_details && (
+                                  <p><span className="font-medium">Special Needs:</span> {child.special_needs_details}</p>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Close</AlertDialogCancel>
-                          {!child.sponsor && (
-                            <AlertDialogAction onClick={() => handleSelectChild(child.id)}>
-                              {adoptionType === "full" ? "Apply to Adopt" : "Sponsor"}
-                            </AlertDialogAction>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Close</AlertDialogCancel>
+                            {!child.sponsor && (
+                              <AlertDialogAction onClick={() => handleSelectChild(child.id)}>
+                                {adoptionType === "full" ? "Apply to Adopt" : "Sponsor"}
+                              </AlertDialogAction>
+                            )}
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                      
+                      {!child.sponsor && (
+                        <Button 
+                          className="flex items-center gap-1"
+                          size="sm"
+                          onClick={() => handleSelectChild(child.id)}
+                        >
+                          {adoptionType === "full" ? (
+                            <>
+                              <UserPlus className="w-3 h-3" />
+                              <span>Adopt</span>
+                            </>
+                          ) : (
+                            <>
+                              <HandHeart className="w-3 h-3" />
+                              <span>Sponsor</span>
+                            </>
                           )}
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                    
-                    {!child.sponsor && (
-                      <Button 
-                        className="flex items-center gap-1"
-                        size="sm"
-                        onClick={() => handleSelectChild(child.id)}
-                      >
-                        {adoptionType === "full" ? (
-                          <>
-                            <UserPlus className="w-3 h-3" />
-                            <span>Adopt</span>
-                          </>
-                        ) : (
-                          <>
-                            <HandHeart className="w-3 h-3" />
-                            <span>Sponsor</span>
-                          </>
-                        )}
-                      </Button>
-                    )}
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+                        </Button>
+                      )}
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </section>
         

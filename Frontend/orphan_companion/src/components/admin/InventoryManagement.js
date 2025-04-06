@@ -280,10 +280,10 @@ const InventoryManagement = () => {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h2 className="text-2xl font-bold">Inventory Management</h2>
-          
-          <div className="flex items-center space-x-2">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <h2 className="text-2xl font-bold">Inventory Management</h2>
+        
+        <div className="flex items-center space-x-2">
             <TabsList>
               <TabsTrigger value="inventory">Inventory Stock</TabsTrigger>
               <TabsTrigger value="movements">Stock Movements</TabsTrigger>
@@ -294,17 +294,17 @@ const InventoryManagement = () => {
         
         <TabsContent value="inventory" className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search inventory..."
-                className="pl-8 w-full md:w-[250px]"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search inventory..."
+              className="pl-8 w-full md:w-[250px]"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
             <div className="flex items-center space-x-2">
               <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value)}>
                 <SelectTrigger className="w-[130px]">
@@ -321,19 +321,19 @@ const InventoryManagement = () => {
               </Select>
               
               <Sheet open={isAddOpen} onOpenChange={setIsAddOpen}>
-                <SheetTrigger asChild>
-                  <Button className="flex items-center gap-1">
-                    <Plus className="h-4 w-4" />
-                    <span>Add Item</span>
-                  </Button>
-                </SheetTrigger>
+            <SheetTrigger asChild>
+              <Button className="flex items-center gap-1">
+                <Plus className="h-4 w-4" />
+                <span>Add Item</span>
+              </Button>
+            </SheetTrigger>
                 <SheetContent className="overflow-y-auto">
-                  <SheetHeader>
-                    <SheetTitle>Add Inventory Item</SheetTitle>
-                    <SheetDescription>
+              <SheetHeader>
+                <SheetTitle>Add Inventory Item</SheetTitle>
+                <SheetDescription>
                       Add a new item to the inventory.
-                    </SheetDescription>
-                  </SheetHeader>
+                </SheetDescription>
+              </SheetHeader>
                   <form onSubmit={handleAddItem} className="grid gap-4 py-4">
                     <div className="space-y-2">
                       <Label htmlFor="item_name">Item Name *</Label>
@@ -389,7 +389,7 @@ const InventoryManagement = () => {
                         />
                       </div>
                     </div>
-                    <div className="space-y-2">
+                <div className="space-y-2">
                       <Label htmlFor="description">Description</Label>
                       <Textarea 
                         id="description" 
@@ -398,8 +398,8 @@ const InventoryManagement = () => {
                         value={formData.description}
                         onChange={handleInputChange}
                       />
-                    </div>
-                    <div className="space-y-2">
+                </div>
+                <div className="space-y-2">
                       <Label htmlFor="condition">Condition</Label>
                       <Select 
                         value={formData.condition} 
@@ -415,8 +415,8 @@ const InventoryManagement = () => {
                           <SelectItem value="Poor">Poor</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
-                    <div className="space-y-2">
+                </div>
+                <div className="space-y-2">
                       <Label htmlFor="location">Storage Location</Label>
                       <Input 
                         id="location" 
@@ -425,8 +425,8 @@ const InventoryManagement = () => {
                         value={formData.location}
                         onChange={handleInputChange}
                       />
-                    </div>
-                    <div className="space-y-2">
+                </div>
+                <div className="space-y-2">
                       <Label htmlFor="supplier">Supplier/Donor</Label>
                       <Input 
                         id="supplier" 
@@ -447,8 +447,8 @@ const InventoryManagement = () => {
                           value={formData.minimum_stock}
                           onChange={handleInputChange}
                         />
-                      </div>
-                      <div className="space-y-2">
+                </div>
+                <div className="space-y-2">
                         <Label htmlFor="cost">Cost (if purchased)</Label>
                         <Input 
                           id="cost" 
@@ -460,9 +460,9 @@ const InventoryManagement = () => {
                           onChange={handleInputChange}
                         />
                       </div>
-                    </div>
-                    
-                    <div className="pt-4">
+                </div>
+                
+                <div className="pt-4">
                       <Button type="submit" className="w-full" disabled={isLoading}>
                         {isLoading ? (
                           <>
@@ -613,8 +613,8 @@ const InventoryManagement = () => {
                           value={formData.cost}
                           onChange={handleInputChange}
                         />
-                      </div>
-                    </div>
+                </div>
+              </div>
                     
                     <div className="pt-4">
                       <Button type="submit" className="w-full" disabled={isLoading}>
@@ -629,69 +629,69 @@ const InventoryManagement = () => {
                       </Button>
                     </div>
                   </form>
-                </SheetContent>
-              </Sheet>
-            </div>
-          </div>
-          
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-2">
-                  <Package className="h-10 w-10 text-primary bg-primary/10 p-2 rounded-full" />
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total Items</p>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
+      
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-2">
+              <Package className="h-10 w-10 text-primary bg-primary/10 p-2 rounded-full" />
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Items</p>
                     <p className="text-2xl font-bold">{inventoryStats.total}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-2">
-                  <Shirt className="h-10 w-10 text-blue-500 bg-blue-100 p-2 rounded-full" />
-                  <div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-2">
+              <Shirt className="h-10 w-10 text-blue-500 bg-blue-100 p-2 rounded-full" />
+              <div>
                     <p className="text-sm font-medium text-muted-foreground">Clothing</p>
                     <p className="text-2xl font-bold">{inventoryStats.clothing}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-2">
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-2">
                   <Coffee className="h-10 w-10 text-purple-500 bg-purple-100 p-2 rounded-full" />
-                  <div>
+              <div>
                     <p className="text-sm font-medium text-muted-foreground">Food</p>
                     <p className="text-2xl font-bold">{inventoryStats.food}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-2">
-                  <ShoppingBag className="h-10 w-10 text-orange-500 bg-orange-100 p-2 rounded-full" />
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Low Stock</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-2">
+              <ShoppingBag className="h-10 w-10 text-orange-500 bg-orange-100 p-2 rounded-full" />
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Low Stock</p>
                     <p className="text-2xl font-bold">{inventoryStats.lowStock}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          {/* Inventory Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Inventory Items</CardTitle>
-              <CardDescription>View and manage all items in inventory</CardDescription>
-            </CardHeader>
-            <CardContent>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Inventory Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Inventory Items</CardTitle>
+          <CardDescription>View and manage all items in inventory</CardDescription>
+        </CardHeader>
+        <CardContent>
               {isLoading && inventoryItems.length === 0 ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -702,20 +702,20 @@ const InventoryManagement = () => {
                   <p>No inventory items found. Add an item to get started.</p>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Item</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Quantity</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Item</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Quantity</TableHead>
                       <TableHead>Location</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredItems.map((item) => (
-                      <TableRow key={item.id}>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredItems.map((item) => (
+                <TableRow key={item.id}>
                         <TableCell className="font-medium">
                           <div>
                             <div>{item.item_name}</div>
@@ -726,12 +726,12 @@ const InventoryManagement = () => {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1.5">
-                            <CategoryIcon category={item.category} />
-                            {item.category}
-                          </div>
-                        </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      <CategoryIcon category={item.category} />
+                      {item.category}
+                    </div>
+                  </TableCell>
                         <TableCell>
                           {item.quantity} {item.unit}
                         </TableCell>
@@ -739,15 +739,15 @@ const InventoryManagement = () => {
                         <TableCell>
                           <StatusBadge quantity={item.quantity} minimumStock={item.minimum_stock || 0} />
                         </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-1">
+                  <TableCell>
+                    <div className="flex space-x-1">
                             <Button 
                               variant="ghost" 
                               size="sm"
                               onClick={() => handleEditClick(item)}
                             >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                             <Button 
                               variant="ghost" 
                               size="sm"
@@ -757,18 +757,18 @@ const InventoryManagement = () => {
                               {isDeleting && itemToDelete?.id === item.id ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
                               ) : (
-                                <Trash className="h-4 w-4" />
+                        <Trash className="h-4 w-4" />
                               )}
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
               )}
-            </CardContent>
-          </Card>
+        </CardContent>
+      </Card>
         </TabsContent>
         
         <TabsContent value="movements">

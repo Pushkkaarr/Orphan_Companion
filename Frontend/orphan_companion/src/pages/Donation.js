@@ -86,14 +86,35 @@ const DonationPage = () => {
   const handleMonetaryDonation = async (e) => {
     e.preventDefault();
     
-    // In a real app, we would connect to a payment gateway here
-    // and then save the donation to our database
-    
-    toast.success("Thank you for your donation! Redirecting to payment...");
-    
-    // Reset form
-    setDonationAmount("");
-    setItemDescription("");
+    try {
+      // Save donation to the donations table
+      const { error } = await supabase
+        .from('donations')
+        .insert([{
+          donor_name: donorName,
+          donor_email: donorEmail,
+          donor_phone: donorPhone,
+          donation_type: 'Money',
+          amount: donationAmount,
+          notes: itemDescription,
+          status: 'Pending'
+        }]);
+
+      if (error) throw error;
+      
+      // In a real app, we would connect to a payment gateway here
+      toast.success("Thank you for your donation! Redirecting to payment...");
+      
+      // Reset form
+      setDonationAmount("");
+      setItemDescription("");
+      setDonorName("");
+      setDonorEmail("");
+      setDonorPhone("");
+    } catch (error) {
+      console.error("Error submitting donation:", error);
+      toast.error("There was a problem submitting your donation. Please try again.");
+    }
   };
   
   // Handle physical donation
@@ -101,41 +122,50 @@ const DonationPage = () => {
     e.preventDefault();
     
     try {
-      // Prepare data based on whether this is a wishlist item or custom donation
-      let donationData = {
+      // First, prepare the donation data for the donations table
+      const donationData = {
         donor_name: donorName,
         donor_email: donorEmail,
         donor_phone: donorPhone,
-        quantity: parseInt(itemQuantity),
-        delivery_method: deliveryMethod,
-        message: itemDescription
+        donation_type: 'Items',
+        items_description: `${itemQuantity} ${itemCategory}: ${itemDescription}`,
+        status: 'Pending',
+        notes: deliveryMethod === 'pickup' ? 
+          `Pickup requested: ${pickupDate} at ${pickupAddress}` : 
+          'Drop-off'
       };
       
-      // Add pickup info if relevant
-      if (deliveryMethod === "pickup") {
-        donationData.pickup_date = pickupDate;
-        donationData.pickup_address = pickupAddress;
-      }
+      // Save to donations table
+      const { error: donationError } = await supabase
+        .from('donations')
+        .insert([donationData]);
+        
+      if (donationError) throw donationError;
       
       // If this is a pledge for a specific wishlist item
       if (selectedRequestId) {
-        donationData.inventory_request_id = selectedRequestId;
+        const pledgeData = {
+          inventory_request_id: selectedRequestId,
+          donor_name: donorName,
+          donor_email: donorEmail,
+          donor_phone: donorPhone,
+          quantity: parseInt(itemQuantity),
+          delivery_method: deliveryMethod,
+          message: itemDescription
+        };
+        
+        // Add pickup info if relevant
+        if (deliveryMethod === "pickup") {
+          pledgeData.pickup_date = pickupDate;
+          pledgeData.pickup_address = pickupAddress;
+        }
         
         // Save to donation_pledges table
-        const { error } = await supabase
+        const { error: pledgeError } = await supabase
           .from('donation_pledges')
-          .insert([donationData]);
+          .insert([pledgeData]);
           
-        if (error) throw error;
-      } else {
-        // This is a custom donation - we could save it to a different table
-        // For now, just simulate success
-        console.log("Custom donation:", {
-          category: itemCategory,
-          quantity: itemQuantity,
-          description: itemDescription,
-          ...donationData
-        });
+        if (pledgeError) throw pledgeError;
       }
       
       toast.success("Thank you for your donation! We'll be in touch soon.");
@@ -278,50 +308,93 @@ const DonationPage = () => {
                   <CardContent>
                     <form onSubmit={handleMonetaryDonation}>
                       <div className="space-y-6">
-                        <div>
-                          <Label htmlFor="donation-amount">Donation Amount ($)</Label>
-                          <div className="relative mt-1">
-                            <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-                              <DollarSign className="w-5 h-5 text-gray-400" />
-                            </div>
+                        {/* Donor Information */}
+                        <div className="space-y-4">
+                          <h3 className="text-lg font-medium">Your Information</h3>
+                          
+                          <div>
+                            <Label htmlFor="donor-name-monetary">Name *</Label>
                             <Input
-                              id="donation-amount"
-                              type="number"
-                              placeholder="Enter amount"
-                              className="pl-10"
-                              value={donationAmount}
-                              onChange={(e) => setDonationAmount(e.target.value)}
+                              id="donor-name-monetary"
+                              placeholder="Your name"
+                              value={donorName}
+                              onChange={(e) => setDonorName(e.target.value)}
                               required
                             />
                           </div>
+                          
+                          <div>
+                            <Label htmlFor="donor-email-monetary">Email *</Label>
+                            <Input
+                              id="donor-email-monetary"
+                              type="email"
+                              placeholder="Your email"
+                              value={donorEmail}
+                              onChange={(e) => setDonorEmail(e.target.value)}
+                              required
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="donor-phone-monetary">Phone (Optional)</Label>
+                            <Input
+                              id="donor-phone-monetary"
+                              placeholder="Your phone number"
+                              value={donorPhone}
+                              onChange={(e) => setDonorPhone(e.target.value)}
+                            />
+                          </div>
                         </div>
-                        
-                        <div>
-                          <Label>Donation Frequency</Label>
-                          <RadioGroup 
-                            className="grid grid-cols-2 gap-4 mt-2"
-                            value={donationFrequency}
-                            onValueChange={setDonationFrequency}
-                          >
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="one-time" id="one-time" />
-                              <Label htmlFor="one-time">One-time</Label>
+
+                        {/* Donation Details */}
+                        <div className="space-y-4">
+                          <h3 className="text-lg font-medium">Donation Details</h3>
+                          
+                          <div>
+                            <Label htmlFor="donation-amount">Donation Amount ($) *</Label>
+                            <div className="relative mt-1">
+                              <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                                <DollarSign className="w-5 h-5 text-gray-400" />
+                              </div>
+                              <Input
+                                id="donation-amount"
+                                type="number"
+                                placeholder="Enter amount"
+                                className="pl-10"
+                                value={donationAmount}
+                                onChange={(e) => setDonationAmount(e.target.value)}
+                                required
+                              />
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="monthly" id="monthly" />
-                              <Label htmlFor="monthly">Monthly</Label>
-                            </div>
-                          </RadioGroup>
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="message">Message (Optional)</Label>
-                          <Textarea
-                            id="message"
-                            placeholder="Add a message to your donation"
-                            value={itemDescription}
-                            onChange={(e) => setItemDescription(e.target.value)}
-                          />
+                          </div>
+                          
+                          <div>
+                            <Label>Donation Frequency</Label>
+                            <RadioGroup 
+                              className="grid grid-cols-2 gap-4 mt-2"
+                              value={donationFrequency}
+                              onValueChange={setDonationFrequency}
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="one-time" id="one-time" />
+                                <Label htmlFor="one-time">One-time</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="monthly" id="monthly" />
+                                <Label htmlFor="monthly">Monthly</Label>
+                              </div>
+                            </RadioGroup>
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="message">Message (Optional)</Label>
+                            <Textarea
+                              id="message"
+                              placeholder="Add a message to your donation"
+                              value={itemDescription}
+                              onChange={(e) => setItemDescription(e.target.value)}
+                            />
+                          </div>
                         </div>
                       </div>
                       

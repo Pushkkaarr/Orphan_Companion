@@ -1,249 +1,338 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DollarSign, Package, Eye, CheckCircle, XCircle, Download, Search, Filter } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { format } from 'date-fns';
+import { Eye, Download } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
-// Sample data for monetary donations
-const monetaryDonations = [
-  { id: 1, donor: "John Smith", email: "john@example.com", amount: 100, date: "2023-07-15", status: "Completed", type: "One-time" },
-  { id: 2, donor: "Emily Johnson", email: "emily@example.com", amount: 50, date: "2023-07-14", status: "Completed", type: "Monthly" },
-  { id: 3, donor: "Michael Brown", email: "michael@example.com", amount: 200, date: "2023-07-13", status: "Completed", type: "One-time" },
-  { id: 4, donor: "Sarah Davis", email: "sarah@example.com", amount: 75, date: "2023-07-12", status: "Pending", type: "One-time" },
-  { id: 5, donor: "Robert Wilson", email: "robert@example.com", amount: 150, date: "2023-07-11", status: "Completed", type: "Monthly" },
-  { id: 6, donor: "Jennifer Taylor", email: "jennifer@example.com", amount: 25, date: "2023-07-10", status: "Failed", type: "One-time" },
-  { id: 7, donor: "David Miller", email: "david@example.com", amount: 300, date: "2023-07-09", status: "Completed", type: "One-time" },
-  { id: 8, donor: "Lisa Anderson", email: "lisa@example.com", amount: 60, date: "2023-07-08", status: "Completed", type: "Monthly" },
-];
-
-// Sample data for physical donations
-const physicalDonations = [
-  { id: 1, donor: "Amanda Clark", email: "amanda@example.com", items: "Winter clothes (10 pcs)", category: "Clothes", date: "2023-07-15", status: "Received", method: "Drop-off" },
-  { id: 2, donor: "Thomas White", email: "thomas@example.com", items: "Children's books (15 pcs)", category: "Books", date: "2023-07-14", status: "Scheduled", method: "Pickup" },
-  { id: 3, donor: "Patricia Moore", email: "patricia@example.com", items: "Toys (5 pcs)", category: "Toys", date: "2023-07-13", status: "Received", method: "Drop-off" },
-  { id: 4, donor: "James Lee", email: "james@example.com", items: "School supplies", category: "Stationery", date: "2023-07-12", status: "Scheduled", method: "Pickup" },
-  { id: 5, donor: "Jessica Harris", email: "jessica@example.com", items: "Food packages (20 pcs)", category: "Food", date: "2023-07-11", status: "Received", method: "Drop-off" },
-  { id: 6, donor: "Daniel Martin", email: "daniel@example.com", items: "Art supplies", category: "Stationery", date: "2023-07-10", status: "In transit", method: "Pickup" },
-];
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 const DonationsManagement = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  
-  // Filter functions
-  const filteredMonetaryDonations = monetaryDonations.filter(donation => {
-    const matchesSearch = donation.donor.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         donation.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "All" || donation.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-  
-  const filteredPhysicalDonations = physicalDonations.filter(donation => {
-    const matchesSearch = donation.donor.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         donation.email.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         donation.items.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "All" || donation.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  const [donations, setDonations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedDonation, setSelectedDonation] = useState(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [adminNotes, setAdminNotes] = useState('');
+  const [donationStats, setDonationStats] = useState({
+    totalMoneyDonations: 0,
+    pendingDonations: 0,
+    approvedDonations: 0,
+    totalDonations: 0
   });
 
-  // Status badge component
-  const StatusBadge = (string ) => {
-    let color = "bg-gray-100 text-gray-800";
-    
-    if (status === "Completed" || status === "Received") {
-      color = "bg-green-100 text-green-800";
-    } else if (status === "Pending" || status === "Scheduled" || status === "In transit") {
-      color = "bg-blue-100 text-blue-800";
-    } else if (status === "Failed") {
-      color = "bg-red-100 text-red-800";
+  useEffect(() => {
+    fetchDonations();
+  }, []);
+
+  const fetchDonations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('donations')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setDonations(data);
+      
+      // Calculate statistics
+      const moneyDonations = data.filter(d => d.donation_type === 'Money');
+      const totalMoney = moneyDonations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+      const pendingCount = data.filter(d => d.status === 'Pending').length;
+      const approvedCount = data.filter(d => d.status === 'Approved').length;
+      
+      setDonationStats({
+        totalMoneyDonations: totalMoney,
+        pendingDonations: pendingCount,
+        approvedDonations: approvedCount,
+        totalDonations: data.length
+      });
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
-    
-    return <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${color}`}>{status}</span>;
   };
+
+  const handleStatusChange = async (donationId, newStatus) => {
+    try {
+      const { error } = await supabase
+        .from('donations')
+        .update({ status: newStatus })
+        .eq('id', donationId);
+
+      if (error) throw error;
+      fetchDonations();
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const handleUpdateNotes = async () => {
+    if (!selectedDonation) return;
+    
+    try {
+      const { error } = await supabase
+        .from('donations')
+        .update({ notes: adminNotes })
+        .eq('id', selectedDonation.id);
+
+      if (error) throw error;
+      setIsViewDialogOpen(false);
+      fetchDonations();
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Pending':
+        return 'bg-yellow-500';
+      case 'Approved':
+        return 'bg-green-500';
+      case 'Rejected':
+        return 'bg-red-500';
+      case 'Completed':
+        return 'bg-blue-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  const viewDonationDetails = (donation) => {
+    setSelectedDonation(donation);
+    setAdminNotes(donation.notes || '');
+    setIsViewDialogOpen(true);
+  };
+
+  const exportToCsv = () => {
+    // Create CSV content
+    const headers = ["Donor Name", "Email", "Phone", "Type", "Amount", "Description", "Status", "Date"];
+    const csvRows = [headers];
+    
+    donations.forEach(donation => {
+      const details = donation.donation_type === 'Money' ? donation.amount :
+                     (donation.donation_type === 'Items' ? donation.items_description :
+                     donation.services_description);
+      
+      const row = [
+        donation.donor_name,
+        donation.donor_email,
+        donation.donor_phone || '',
+        donation.donation_type,
+        donation.donation_type === 'Money' ? donation.amount : '',
+        details || '',
+        donation.status,
+        new Date(donation.created_at).toLocaleDateString()
+      ];
+      csvRows.push(row);
+    });
+    
+    // Convert to CSV string
+    const csvContent = csvRows.map(row => row.join(',')).join('\n');
+    
+    // Download the CSV file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `donations_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Donations Management</h2>
-        
-        <div className="flex items-center space-x-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search donations..."
-              className="pl-8 w-full md:w-[250px]"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          
-          <Button variant="outline" size="sm" className="flex items-center gap-1">
-            <Filter className="h-4 w-4" />
-            <span className="hidden md:inline">Filter</span>
-          </Button>
-          
-          <Button variant="outline" size="sm" className="flex items-center gap-1">
-            <Download className="h-4 w-4" />
-            <span className="hidden md:inline">Export</span>
-          </Button>
-        </div>
+        <Button onClick={exportToCsv} className="flex items-center gap-2">
+          <Download className="h-4 w-4" />
+          Export to CSV
+        </Button>
       </div>
-      
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+      {/* Stats cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <DollarSign className="h-10 w-10 text-primary bg-primary/10 p-2 rounded-full" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Donations</p>
-                <p className="text-2xl font-bold">$36,000</p>
-              </div>
-            </div>
+          <CardContent className="p-4 flex flex-col items-center justify-center">
+            <p className="text-lg font-medium">Total Donations</p>
+            <p className="text-3xl font-bold">{donationStats.totalDonations}</p>
           </CardContent>
         </Card>
-        
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <Package className="h-10 w-10 text-orange-500 bg-orange-100 p-2 rounded-full" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Physical Items</p>
-                <p className="text-2xl font-bold">250 items</p>
-              </div>
-            </div>
+          <CardContent className="p-4 flex flex-col items-center justify-center">
+            <p className="text-lg font-medium">Money Donations</p>
+            <p className="text-3xl font-bold">${donationStats.totalMoneyDonations.toFixed(2)}</p>
           </CardContent>
         </Card>
-        
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="h-10 w-10 text-green-500 bg-green-100 p-2 rounded-full" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Completed</p>
-                <p className="text-2xl font-bold">85%</p>
-              </div>
-            </div>
+          <CardContent className="p-4 flex flex-col items-center justify-center">
+            <p className="text-lg font-medium">Pending</p>
+            <p className="text-3xl font-bold">{donationStats.pendingDonations}</p>
           </CardContent>
         </Card>
-        
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <XCircle className="h-10 w-10 text-red-500 bg-red-100 p-2 rounded-full" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Failed/Pending</p>
-                <p className="text-2xl font-bold">15%</p>
-              </div>
-            </div>
+          <CardContent className="p-4 flex flex-col items-center justify-center">
+            <p className="text-lg font-medium">Approved</p>
+            <p className="text-3xl font-bold">{donationStats.approvedDonations}</p>
           </CardContent>
         </Card>
       </div>
-      
-      {/* Donation Tables */}
-      <Tabs defaultValue="monetary" className="w-full">
-        <TabsList>
-          <TabsTrigger value="monetary">Monetary Donations</TabsTrigger>
-          <TabsTrigger value="physical">Physical Donations</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="monetary">
-          <Card>
-            <CardHeader>
-              <CardTitle>Monetary Donations</CardTitle>
-              <CardDescription>View and manage all monetary donations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Donor</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredMonetaryDonations.map((donation) => (
-                    <TableRow key={donation.id}>
-                      <TableCell>#{donation.id}</TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{donation.donor}</p>
-                          <p className="text-sm text-muted-foreground">{donation.email}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>${donation.amount}</TableCell>
-                      <TableCell>{donation.date}</TableCell>
-                      <TableCell>{donation.type}</TableCell>
-                      <TableCell><StatusBadge status={donation.status} /></TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="physical">
-          <Card>
-            <CardHeader>
-              <CardTitle>Physical Donations</CardTitle>
-              <CardDescription>View and manage all physical item donations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Donor</TableHead>
-                    <TableHead>Items</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Method</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPhysicalDonations.map((donation) => (
-                    <TableRow key={donation.id}>
-                      <TableCell>#{donation.id}</TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{donation.donor}</p>
-                          <p className="text-sm text-muted-foreground">{donation.email}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>{donation.items}</TableCell>
-                      <TableCell>{donation.category}</TableCell>
-                      <TableCell>{donation.date}</TableCell>
-                      <TableCell>{donation.method}</TableCell>
-                      <TableCell><StatusBadge status={donation.status} /></TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Donor</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Details</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {donations.map((donation) => (
+            <TableRow key={donation.id}>
+              <TableCell>
+                <div>
+                  <div className="font-medium">{donation.donor_name}</div>
+                  <div className="text-sm text-gray-500">{donation.donor_email}</div>
+                </div>
+              </TableCell>
+              <TableCell>{donation.donation_type}</TableCell>
+              <TableCell>
+                {donation.donation_type === 'Money' && `$${donation.amount}`}
+                {donation.donation_type === 'Items' && donation.items_description}
+                {donation.donation_type === 'Services' && donation.services_description}
+              </TableCell>
+              <TableCell>
+                <Badge className={getStatusColor(donation.status)}>
+                  {donation.status}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                {format(new Date(donation.created_at), 'MMM d, yyyy')}
+              </TableCell>
+              <TableCell>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => viewDonationDetails(donation)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Select
+                    value={donation.status}
+                    onValueChange={(value) => handleStatusChange(donation.id, value)}
+                  >
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Pending">Pending</SelectItem>
+                      <SelectItem value="Approved">Approved</SelectItem>
+                      <SelectItem value="Rejected">Rejected</SelectItem>
+                      <SelectItem value="Completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      {/* View Donation Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Donation Details</DialogTitle>
+          </DialogHeader>
+          {selectedDonation && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Donor Information</h3>
+                <p className="mt-1"><strong>Name:</strong> {selectedDonation.donor_name}</p>
+                <p><strong>Email:</strong> {selectedDonation.donor_email}</p>
+                {selectedDonation.donor_phone && (
+                  <p><strong>Phone:</strong> {selectedDonation.donor_phone}</p>
+                )}
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Donation Details</h3>
+                <p className="mt-1"><strong>Type:</strong> {selectedDonation.donation_type}</p>
+                {selectedDonation.donation_type === 'Money' && (
+                  <p><strong>Amount:</strong> ${selectedDonation.amount}</p>
+                )}
+                {selectedDonation.donation_type === 'Items' && (
+                  <p><strong>Items:</strong> {selectedDonation.items_description}</p>
+                )}
+                {selectedDonation.donation_type === 'Services' && (
+                  <p><strong>Services:</strong> {selectedDonation.services_description}</p>
+                )}
+                <p><strong>Status:</strong> {selectedDonation.status}</p>
+                <p><strong>Date:</strong> {format(new Date(selectedDonation.created_at), 'MMM d, yyyy')}</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="admin_notes">Admin Notes</Label>
+                <Textarea
+                  id="admin_notes"
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                  placeholder="Add notes about this donation..."
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsViewDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateNotes}>Save Notes</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

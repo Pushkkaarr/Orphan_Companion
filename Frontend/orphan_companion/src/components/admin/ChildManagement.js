@@ -599,7 +599,7 @@ const ChildManagement = () => {
                       "Update Child"
                     )}
                   </Button>
-                </div>
+              </div>
               </form>
             </SheetContent>
           </Sheet>
@@ -674,34 +674,34 @@ const ChildManagement = () => {
               <p>No children found. Add a child to get started.</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Age</TableHead>
-                  <TableHead>Background</TableHead>
-                  <TableHead>Education</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Age</TableHead>
+                <TableHead>Background</TableHead>
+                <TableHead>Education</TableHead>
                   <TableHead>Health</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredChildren.map((child) => (
-                  <TableRow key={child.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredChildren.map((child) => (
+                <TableRow key={child.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                           {child.full_name?.charAt(0) || '?'}
-                        </div>
-                        <div>
-                          <p className="font-medium">{child.full_name}</p>
-                          <p className="text-xs text-muted-foreground">{child.gender}, {child.age} years</p>
-                        </div>
                       </div>
-                    </TableCell>
-                    <TableCell>{child.age}</TableCell>
-                    <TableCell className="max-w-[200px] truncate" title={child.background}>
+                      <div>
+                          <p className="font-medium">{child.full_name}</p>
+                        <p className="text-xs text-muted-foreground">{child.gender}, {child.age} years</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{child.age}</TableCell>
+                  <TableCell className="max-w-[200px] truncate" title={child.background}>
                       {child.background || 'N/A'}
                     </TableCell>
                     <TableCell>{child.education_level || 'N/A'}</TableCell>
@@ -713,17 +713,17 @@ const ChildManagement = () => {
                       ) : (
                         child.health_status || 'Healthy'
                       )}
-                    </TableCell>
+                  </TableCell>
                     <TableCell><StatusBadge status={child.status || 'Available'} /></TableCell>
-                    <TableCell>
-                      <div className="flex space-x-1">
+                  <TableCell>
+                    <div className="flex space-x-1">
                         <Button 
                           variant="ghost" 
                           size="sm"
                           onClick={() => handleEditClick(child)}
                         >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                         <Button 
                           variant="ghost" 
                           size="sm"
@@ -733,15 +733,15 @@ const ChildManagement = () => {
                           {isDeleting && childToDelete?.id === child.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
-                            <Trash className="h-4 w-4" />
+                        <Trash className="h-4 w-4" />
                           )}
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
           )}
         </CardContent>
       </Card>

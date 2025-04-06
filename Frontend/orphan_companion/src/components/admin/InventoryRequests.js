@@ -6,12 +6,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AlertCircle, Search, Plus, Pencil, Trash, Loader2 } from "lucide-react";
+import { AlertCircle, Search, Plus, Pencil, Trash, Loader2, CheckCircle2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { createBrowserClient } from '@supabase/ssr';
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -47,6 +58,16 @@ const InventoryRequests = () => {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [pledges, setPledges] = useState([]);
   const [showPledgesFor, setShowPledgesFor] = useState(null);
+  const [isFulfilling, setIsFulfilling] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isFulfillDialogOpen, setIsFulfillDialogOpen] = useState(false);
+  const [pledgeToFulfill, setPledgeToFulfill] = useState(null);
+  const [requestsStats, setRequestsStats] = useState({
+    total: 0,
+    fulfilled: 0,
+    inProgress: 0,
+    critical: 0
+  });
   
   // Form state
   const [formData, setFormData] = useState({
@@ -74,9 +95,29 @@ const InventoryRequests = () => {
       if (error) throw error;
 
       setRequests(data || []);
+      
+      // Calculate statistics
+      const totalRequests = data?.length || 0;
+      const fulfilledRequests = data?.filter(req => 
+        req.quantity_fulfilled >= req.quantity_needed
+      ).length || 0;
+      const inProgressRequests = data?.filter(req => 
+        req.quantity_fulfilled > 0 && req.quantity_fulfilled < req.quantity_needed
+      ).length || 0;
+      const criticalRequests = data?.filter(req => 
+        req.priority === 'Critical' && req.quantity_fulfilled < req.quantity_needed
+      ).length || 0;
+      
+      setRequestsStats({
+        total: totalRequests,
+        fulfilled: fulfilledRequests,
+        inProgress: inProgressRequests,
+        critical: criticalRequests
+      });
+      
     } catch (error) {
       console.error('Error fetching inventory requests:', error);
-      alert('Could not load inventory request data');
+      toast.error('Could not load inventory request data');
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +137,7 @@ const InventoryRequests = () => {
       setShowPledgesFor(requestId);
     } catch (error) {
       console.error('Error fetching pledges:', error);
-      alert('Could not load pledge data');
+      toast.error('Could not load pledge data');
     }
   };
 
@@ -147,13 +188,13 @@ const InventoryRequests = () => {
 
       if (error) throw error;
 
-      alert('Request added successfully');
+      toast.success('Request added successfully');
       setIsAddOpen(false);
       resetForm();
       fetchRequests(); // Refresh data
     } catch (error) {
       console.error('Error adding request:', error);
-      alert(error.message || 'Failed to add request');
+      toast.error(error.message || 'Failed to add request');
     } finally {
       setIsLoading(false);
     }
@@ -194,13 +235,13 @@ const InventoryRequests = () => {
 
       if (error) throw error;
 
-      alert('Request updated successfully');
+      toast.success('Request updated successfully');
       setIsEditOpen(false);
       resetForm();
       fetchRequests(); // Refresh data
     } catch (error) {
       console.error('Error updating request:', error);
-      alert(error.message || 'Failed to update request');
+      toast.error(error.message || 'Failed to update request');
     } finally {
       setIsLoading(false);
     }
@@ -208,14 +249,14 @@ const InventoryRequests = () => {
 
   const handleDeleteClick = (item) => {
     setItemToDelete(item);
-    if (confirm(`Are you sure you want to delete the request for ${item.item_name}?`)) {
-      handleDeleteRequest(item.id);
-    }
+    setIsDeleteDialogOpen(true);
   };
 
   const handleDeleteRequest = async (id) => {
     try {
       setIsDeleting(true);
+      setIsDeleteDialogOpen(false);
+      
       const { error } = await supabase
         .from('inventory_requests')
         .delete()
@@ -223,15 +264,27 @@ const InventoryRequests = () => {
 
       if (error) throw error;
 
-      alert('Request deleted successfully');
+      toast.success('Request deleted successfully');
       fetchRequests(); // Refresh data
     } catch (error) {
       console.error('Error deleting request:', error);
-      alert('Failed to delete request');
+      toast.error('Failed to delete request');
     } finally {
       setIsDeleting(false);
       setItemToDelete(null);
     }
+  };
+
+  // Add a function to update the UI directly when a pledge is fulfilled
+  // This helps ensure the view updates even if there are issues with the database refresh
+  const updatePledgeLocally = (pledgeId, newStatus) => {
+    setPledges(prevPledges => 
+      prevPledges.map(p => 
+        p.id === pledgeId 
+          ? {...p, status: newStatus} 
+          : p
+      )
+    );
   };
 
   const handleUpdatePledgeStatus = async (pledgeId, newStatus) => {
@@ -242,6 +295,11 @@ const InventoryRequests = () => {
         .eq('id', pledgeId);
 
       if (error) throw error;
+      
+      // Update local UI immediately
+      updatePledgeLocally(pledgeId, newStatus);
+
+      toast.success('Pledge status updated successfully');
 
       // Refresh pledges
       if (showPledgesFor) {
@@ -252,7 +310,173 @@ const InventoryRequests = () => {
       fetchRequests();
     } catch (error) {
       console.error('Error updating pledge status:', error);
-      alert('Failed to update pledge status');
+      toast.error('Failed to update pledge status');
+    }
+  };
+
+  const handleFulfillClick = (pledge, requestItem) => {
+    setPledgeToFulfill({ pledge, requestItem });
+    setIsFulfillDialogOpen(true);
+  };
+  
+  const handleFulfillNeed = async () => {
+    if (!pledgeToFulfill) return;
+    
+    const { pledge, requestItem } = pledgeToFulfill;
+    const pledgeId = pledge.id;
+    
+    try {
+      setIsFulfilling(true);
+      setIsFulfillDialogOpen(false);
+      
+      // Show in-progress toast
+      const toastId = toast.loading('Processing donation fulfillment...');
+      
+      // First check if the item already exists in inventory
+      const { data: existingItems, error: searchError } = await supabase
+        .from('inventory')
+        .select('id, quantity')
+        .eq('item_name', requestItem.item_name)
+        .eq('category', requestItem.category);
+        
+      if (searchError) throw searchError;
+      
+      let inventoryId;
+      let operationSuccess = false;
+      
+      try {
+        // Start a transaction by using the Supabase REST API
+        // First let's process the inventory update
+        if (existingItems && existingItems.length > 0) {
+          // Update existing inventory item
+          const { error: updateError } = await supabase
+            .from('inventory')
+            .update({ 
+              quantity: existingItems[0].quantity + pledge.quantity
+            })
+            .eq('id', existingItems[0].id);
+            
+          if (updateError) throw updateError;
+          inventoryId = existingItems[0].id;
+        } else {
+          // Create new inventory item
+          const { data: newItem, error: insertError } = await supabase
+            .from('inventory')
+            .insert({
+              item_name: requestItem.item_name,
+              category: requestItem.category,
+              quantity: pledge.quantity,
+              unit: requestItem.unit,
+              description: requestItem.description || null,
+              condition: 'Good', // Default value
+              acquisition_date: new Date().toISOString().split('T')[0],
+              location: 'Main Storage'
+            })
+            .select();
+            
+          if (insertError) throw insertError;
+          inventoryId = newItem[0].id;
+        }
+        
+        // Record a movement in inventory_movements
+        const { error: movementError } = await supabase
+          .from('inventory_movements')
+          .insert({
+            inventory_id: inventoryId,
+            quantity: pledge.quantity,
+            movement_type: 'IN',
+            reason: 'Donation pledge fulfilled',
+            source_destination: pledge.donor_name,
+            notes: `Pledge ID: ${pledge.id}`,
+            moved_by: 'Admin' // In a real app, use the current user
+          });
+          
+        if (movementError) throw movementError;
+        
+        // Update the pledge status to received
+        const { error: pledgeError } = await supabase
+          .from('donation_pledges')
+          .update({ status: 'Received' })
+          .eq('id', pledgeId);
+          
+        if (pledgeError) throw pledgeError;
+        
+        operationSuccess = true;
+      } catch (error) {
+        console.error('Error during database operations:', error);
+        toast.error(`Database operation failed: ${error.message}`, { id: toastId });
+        throw new Error('Database operation failed: ' + error.message);
+      }
+      
+      if (operationSuccess) {
+        // Update local UI immediately
+        updatePledgeLocally(pledgeId, 'Received');
+        
+        // Calculate the updated quantity
+        const updatedFulfilledQty = requestItem.quantity_fulfilled + pledge.quantity;
+        
+        // Check if the trigger is updating the request's fulfilled quantity
+        // Wait a short time for the trigger to execute
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Get the updated request data
+        const { data: updatedRequestData, error: checkError } = await supabase
+          .from('inventory_requests')
+          .select('quantity_fulfilled')
+          .eq('id', requestItem.id)
+          .single();
+        
+        // If we can fetch the updated data and the trigger didn't work
+        if (!checkError && updatedRequestData && updatedRequestData.quantity_fulfilled < updatedFulfilledQty) {
+          console.log('Trigger did not update quantity, manually updating...');
+          // The trigger didn't work, manually update
+          const { error: requestUpdateError } = await supabase
+            .from('inventory_requests')
+            .update({
+              quantity_fulfilled: updatedFulfilledQty
+            })
+            .eq('id', requestItem.id);
+            
+          if (requestUpdateError) {
+            console.error('Error updating fulfilled quantity:', requestUpdateError);
+            // Continue anyway since the pledge was successfully processed
+          }
+        }
+        
+        // Also update the requests data in state
+        setRequests(prevRequests => 
+          prevRequests.map(r => 
+            r.id === requestItem.id 
+              ? {...r, quantity_fulfilled: updatedFulfilledQty} 
+              : r
+          )
+        );
+        
+        // Update the success toast with details
+        toast.success(
+          `Successfully processed ${pledge.quantity} ${requestItem.unit} of ${requestItem.item_name} from ${pledge.donor_name}`,
+          { id: toastId }
+        );
+        
+        // Refresh the data to ensure everything is in sync
+        setTimeout(async () => {
+          // Refresh the pledges
+          if (showPledgesFor) {
+            await fetchPledges(showPledgesFor);
+          }
+          
+          // Then refresh the main requests data
+          await fetchRequests();
+          
+          setIsFulfilling(false);
+          setPledgeToFulfill(null);
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error fulfilling need:', error);
+      toast.error('Failed to fulfill need: ' + error.message);
+      setIsFulfilling(false);
+      setPledgeToFulfill(null);
     }
   };
   
@@ -564,6 +788,65 @@ const InventoryRequests = () => {
         </div>
       </div>
       
+      {/* Add statistics cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Requests</p>
+                <p className="text-2xl font-bold">{requestsStats.total}</p>
+              </div>
+              <div className="p-2 bg-blue-100 text-blue-700 rounded-full">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Fulfilled</p>
+                <p className="text-2xl font-bold">{requestsStats.fulfilled}</p>
+              </div>
+              <div className="p-2 bg-green-100 text-green-700 rounded-full">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">In Progress</p>
+                <p className="text-2xl font-bold">{requestsStats.inProgress}</p>
+              </div>
+              <div className="p-2 bg-amber-100 text-amber-700 rounded-full">
+                <Loader2 className="w-5 h-5" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Critical Needs</p>
+                <p className="text-2xl font-bold">{requestsStats.critical}</p>
+              </div>
+              <div className="p-2 bg-red-100 text-red-700 rounded-full">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
       {/* Requests Table */}
       <Card>
         <CardHeader>
@@ -689,7 +972,13 @@ const InventoryRequests = () => {
                                 </TableHeader>
                                 <TableBody>
                                   {pledges.map(pledge => (
-                                    <TableRow key={pledge.id}>
+                                    <TableRow key={pledge.id} className={
+                                      pledge.status === 'Received' 
+                                        ? 'bg-green-50' 
+                                        : pledge.status === 'Cancelled'
+                                        ? 'bg-red-50'
+                                        : ''
+                                    }>
                                       <TableCell>
                                         <div>
                                           <div className="font-medium">{pledge.donor_name}</div>
@@ -724,19 +1013,45 @@ const InventoryRequests = () => {
                                         </Badge>
                                       </TableCell>
                                       <TableCell>
-                                        <Select 
-                                          defaultValue={pledge.status}
-                                          onValueChange={(value) => handleUpdatePledgeStatus(pledge.id, value)}
-                                        >
-                                          <SelectTrigger className="w-[130px]">
-                                            <SelectValue placeholder="Change status" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="Pending">Pending</SelectItem>
-                                            <SelectItem value="Received">Received</SelectItem>
-                                            <SelectItem value="Cancelled">Cancelled</SelectItem>
-                                          </SelectContent>
-                                        </Select>
+                                        <div className="flex space-x-2 items-center">
+                                          <Select 
+                                            defaultValue={pledge.status}
+                                            onValueChange={(value) => handleUpdatePledgeStatus(pledge.id, value)}
+                                          >
+                                            <SelectTrigger className="w-[130px]">
+                                              <SelectValue placeholder="Change status" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="Pending">Pending</SelectItem>
+                                              <SelectItem value="Received">Received</SelectItem>
+                                              <SelectItem value="Cancelled">Cancelled</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                          
+                                          {pledge.status !== 'Received' && (
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="flex items-center gap-1 ml-2"
+                                              onClick={() => handleFulfillClick(pledge, request)}
+                                              disabled={isFulfilling}
+                                            >
+                                              {isFulfilling && pledgeToFulfill?.pledge.id === pledge.id ? (
+                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                              ) : (
+                                                <CheckCircle2 className="h-3 w-3" />
+                                              )}
+                                              <span>Fulfill</span>
+                                            </Button>
+                                          )}
+                                          
+                                          {pledge.status === 'Received' && (
+                                            <Badge variant="outline" className="flex items-center gap-1 bg-green-50 text-green-800 border-green-200">
+                                              <CheckCircle2 className="h-3 w-3" />
+                                              <span>Fulfilled</span>
+                                            </Badge>
+                                          )}
+                                        </div>
                                       </TableCell>
                                     </TableRow>
                                   ))}
@@ -754,6 +1069,62 @@ const InventoryRequests = () => {
           )}
         </CardContent>
       </Card>
+      
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the request for {itemToDelete?.item_name}?
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => itemToDelete && handleDeleteRequest(itemToDelete.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      <AlertDialog open={isFulfillDialogOpen} onOpenChange={setIsFulfillDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Fulfillment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to fulfill this pledge for <strong>{pledgeToFulfill?.requestItem.item_name}</strong>?
+              
+              <div className="my-4 p-3 bg-muted rounded-md">
+                <p><strong>Donor:</strong> {pledgeToFulfill?.pledge.donor_name}</p>
+                <p><strong>Quantity:</strong> {pledgeToFulfill?.pledge.quantity} {pledgeToFulfill?.requestItem.unit}</p>
+                {pledgeToFulfill?.pledge.delivery_method && (
+                  <p><strong>Delivery:</strong> {pledgeToFulfill?.pledge.delivery_method === 'pickup' ? 'Pickup' : 'Drop-off'}</p>
+                )}
+              </div>
+              
+              This will:
+              <ul className="list-disc pl-6 mt-2">
+                <li>Update the inventory with {pledgeToFulfill?.pledge.quantity} {pledgeToFulfill?.requestItem.unit}</li>
+                <li>Record the movement in inventory history</li>
+                <li>Mark the pledge as "Received"</li>
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleFulfillNeed}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
