@@ -202,7 +202,7 @@ const AdoptionManagement = () => {
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[160px]">
               <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
+            <Filter className="h-4 w-4" />
                 <span>{statusFilter}</span>
               </div>
             </SelectTrigger>
@@ -299,48 +299,48 @@ const AdoptionManagement = () => {
                   <p className="text-muted-foreground">No adoption applications found matching your filters.</p>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Applicant</TableHead>
-                      <TableHead>Child</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Application Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredFullAdoptions.map((adoption) => (
-                      <TableRow key={adoption.id}>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Applicant</TableHead>
+                    <TableHead>Child</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Application Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredFullAdoptions.map((adoption) => (
+                    <TableRow key={adoption.id}>
                         <TableCell className="font-mono text-xs">{adoption.id.substring(0, 8)}...</TableCell>
                         <TableCell className="font-medium">{adoption.applicant_name}</TableCell>
-                        <TableCell>
-                          <div>
+                      <TableCell>
+                        <div>
                             <p className="font-medium">{adoption.children?.full_name || 'Unknown'}</p>
                             <p className="text-xs text-muted-foreground">
                               {adoption.children ? `${adoption.children.age} years, ${adoption.children.gender}` : 'Child data unavailable'}
                             </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
                             <p className="text-sm">{adoption.applicant_email}</p>
                             <p className="text-xs text-muted-foreground">{adoption.applicant_phone}</p>
-                          </div>
-                        </TableCell>
+                        </div>
+                      </TableCell>
                         <TableCell>{format(new Date(adoption.application_date), 'MMM d, yyyy')}</TableCell>
-                        <TableCell><StatusBadge status={adoption.status} /></TableCell>
-                        <TableCell>
+                      <TableCell><StatusBadge status={adoption.status} /></TableCell>
+                      <TableCell>
                           <div className="flex items-center space-x-2">
                             <Button 
                               variant="ghost" 
                               size="sm"
                               onClick={() => handleViewDetails(adoption, 'full')}
                             >
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                          <Eye className="h-4 w-4" />
+                        </Button>
                             <Select 
                               value={adoption.status} 
                               onValueChange={(value) => handleUpdateStatus(adoption.id, value, 'full')}
@@ -357,11 +357,11 @@ const AdoptionManagement = () => {
                               </SelectContent>
                             </Select>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
               )}
             </CardContent>
           </Card>
@@ -380,38 +380,38 @@ const AdoptionManagement = () => {
                   <p className="text-muted-foreground">No sponsorships found matching your filters.</p>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Sponsor</TableHead>
-                      <TableHead>Child</TableHead>
-                      <TableHead>Sponsorship</TableHead>
-                      <TableHead>Start Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredVirtualAdoptions.map((adoption) => (
-                      <TableRow key={adoption.id}>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Sponsor</TableHead>
+                    <TableHead>Child</TableHead>
+                    <TableHead>Sponsorship</TableHead>
+                    <TableHead>Start Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredVirtualAdoptions.map((adoption) => (
+                    <TableRow key={adoption.id}>
                         <TableCell className="font-mono text-xs">{adoption.id.substring(0, 8)}...</TableCell>
-                        <TableCell>
-                          <div>
+                      <TableCell>
+                        <div>
                             <p className="font-medium">{adoption.sponsor_name}</p>
                             <p className="text-xs text-muted-foreground">{adoption.sponsor_email}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
                             <p className="font-medium">{adoption.children?.full_name || 'Unknown'}</p>
                             <p className="text-xs text-muted-foreground">
                               {adoption.children ? `${adoption.children.age} years, ${adoption.children.gender}` : 'Child data unavailable'}
                             </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
                             <p className="font-medium">${adoption.monthly_amount}/month</p>
                             <p className="text-xs text-muted-foreground">
                               {adoption.is_ongoing 
@@ -420,19 +420,19 @@ const AdoptionManagement = () => {
                                   ? `${adoption.duration_months} months` 
                                   : 'Not specified'}
                             </p>
-                          </div>
-                        </TableCell>
+                        </div>
+                      </TableCell>
                         <TableCell>{format(new Date(adoption.start_date), 'MMM d, yyyy')}</TableCell>
-                        <TableCell><StatusBadge status={adoption.status} /></TableCell>
-                        <TableCell>
+                      <TableCell><StatusBadge status={adoption.status} /></TableCell>
+                      <TableCell>
                           <div className="flex items-center space-x-2">
                             <Button 
                               variant="ghost" 
                               size="sm"
                               onClick={() => handleViewDetails(adoption, 'virtual')}
                             >
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                          <Eye className="h-4 w-4" />
+                        </Button>
                             <Select 
                               value={adoption.status} 
                               onValueChange={(value) => handleUpdateStatus(adoption.id, value, 'virtual')}
@@ -449,11 +449,11 @@ const AdoptionManagement = () => {
                               </SelectContent>
                             </Select>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
               )}
             </CardContent>
           </Card>

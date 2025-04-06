@@ -179,11 +179,11 @@ const DonationsManagement = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Donations Management</h2>
         <Button onClick={exportToCsv} className="flex items-center gap-2">
-          <Download className="h-4 w-4" />
+            <Download className="h-4 w-4" />
           Export to CSV
-        </Button>
+          </Button>
       </div>
-
+      
       {/* Stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -211,27 +211,27 @@ const DonationsManagement = () => {
           </CardContent>
         </Card>
       </div>
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Donor</TableHead>
-            <TableHead>Type</TableHead>
+      
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Donor</TableHead>
+                    <TableHead>Type</TableHead>
             <TableHead>Details</TableHead>
-            <TableHead>Status</TableHead>
+                    <TableHead>Status</TableHead>
             <TableHead>Date</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
           {donations.map((donation) => (
-            <TableRow key={donation.id}>
-              <TableCell>
-                <div>
+                    <TableRow key={donation.id}>
+                      <TableCell>
+                        <div>
                   <div className="font-medium">{donation.donor_name}</div>
                   <div className="text-sm text-gray-500">{donation.donor_email}</div>
-                </div>
-              </TableCell>
+                        </div>
+                      </TableCell>
               <TableCell>{donation.donation_type}</TableCell>
               <TableCell>
                 {donation.donation_type === 'Money' && `$${donation.amount}`}
@@ -246,15 +246,15 @@ const DonationsManagement = () => {
               <TableCell>
                 {format(new Date(donation.created_at), 'MMM d, yyyy')}
               </TableCell>
-              <TableCell>
+                      <TableCell>
                 <div className="flex space-x-2">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => viewDonationDetails(donation)}
                   >
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                          <Eye className="h-4 w-4" />
+                        </Button>
                   <Select
                     value={donation.status}
                     onValueChange={(value) => handleStatusChange(donation.id, value)}
@@ -270,11 +270,11 @@ const DonationsManagement = () => {
                     </SelectContent>
                   </Select>
                 </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
 
       {/* View Donation Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
@@ -293,7 +293,7 @@ const DonationsManagement = () => {
                 )}
               </div>
 
-              <div>
+                        <div>
                 <h3 className="text-sm font-medium text-gray-500">Donation Details</h3>
                 <p className="mt-1"><strong>Type:</strong> {selectedDonation.donation_type}</p>
                 {selectedDonation.donation_type === 'Money' && (
@@ -317,7 +317,7 @@ const DonationsManagement = () => {
                   onChange={(e) => setAdminNotes(e.target.value)}
                   placeholder="Add notes about this donation..."
                 />
-              </div>
+                        </div>
 
               <div className="flex justify-end space-x-2">
                 <Button 
@@ -326,7 +326,7 @@ const DonationsManagement = () => {
                   onClick={() => setIsViewDialogOpen(false)}
                 >
                   Cancel
-                </Button>
+                        </Button>
                 <Button onClick={handleUpdateNotes}>Save Notes</Button>
               </div>
             </div>

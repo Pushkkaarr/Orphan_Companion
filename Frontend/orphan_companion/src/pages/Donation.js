@@ -102,12 +102,12 @@ const DonationPage = () => {
 
       if (error) throw error;
       
-      // In a real app, we would connect to a payment gateway here
-      toast.success("Thank you for your donation! Redirecting to payment...");
-      
-      // Reset form
-      setDonationAmount("");
-      setItemDescription("");
+    // In a real app, we would connect to a payment gateway here
+    toast.success("Thank you for your donation! Redirecting to payment...");
+    
+    // Reset form
+    setDonationAmount("");
+    setItemDescription("");
       setDonorName("");
       setDonorEmail("");
       setDonorPhone("");
@@ -146,19 +146,19 @@ const DonationPage = () => {
       if (selectedRequestId) {
         const pledgeData = {
           inventory_request_id: selectedRequestId,
-          donor_name: donorName,
-          donor_email: donorEmail,
-          donor_phone: donorPhone,
-          quantity: parseInt(itemQuantity),
-          delivery_method: deliveryMethod,
-          message: itemDescription
-        };
-        
-        // Add pickup info if relevant
-        if (deliveryMethod === "pickup") {
+        donor_name: donorName,
+        donor_email: donorEmail,
+        donor_phone: donorPhone,
+        quantity: parseInt(itemQuantity),
+        delivery_method: deliveryMethod,
+        message: itemDescription
+      };
+      
+      // Add pickup info if relevant
+      if (deliveryMethod === "pickup") {
           pledgeData.pickup_date = pickupDate;
           pledgeData.pickup_address = pickupAddress;
-        }
+      }
         
         // Save to donation_pledges table
         const { error: pledgeError } = await supabase
@@ -350,50 +350,50 @@ const DonationPage = () => {
                         <div className="space-y-4">
                           <h3 className="text-lg font-medium">Donation Details</h3>
                           
-                          <div>
+                        <div>
                             <Label htmlFor="donation-amount">Donation Amount ($) *</Label>
-                            <div className="relative mt-1">
-                              <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-                                <DollarSign className="w-5 h-5 text-gray-400" />
-                              </div>
-                              <Input
-                                id="donation-amount"
-                                type="number"
-                                placeholder="Enter amount"
-                                className="pl-10"
-                                value={donationAmount}
-                                onChange={(e) => setDonationAmount(e.target.value)}
-                                required
-                              />
+                          <div className="relative mt-1">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                              <DollarSign className="w-5 h-5 text-gray-400" />
                             </div>
-                          </div>
-                          
-                          <div>
-                            <Label>Donation Frequency</Label>
-                            <RadioGroup 
-                              className="grid grid-cols-2 gap-4 mt-2"
-                              value={donationFrequency}
-                              onValueChange={setDonationFrequency}
-                            >
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="one-time" id="one-time" />
-                                <Label htmlFor="one-time">One-time</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="monthly" id="monthly" />
-                                <Label htmlFor="monthly">Monthly</Label>
-                              </div>
-                            </RadioGroup>
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="message">Message (Optional)</Label>
-                            <Textarea
-                              id="message"
-                              placeholder="Add a message to your donation"
-                              value={itemDescription}
-                              onChange={(e) => setItemDescription(e.target.value)}
+                            <Input
+                              id="donation-amount"
+                              type="number"
+                              placeholder="Enter amount"
+                              className="pl-10"
+                              value={donationAmount}
+                              onChange={(e) => setDonationAmount(e.target.value)}
+                              required
                             />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <Label>Donation Frequency</Label>
+                          <RadioGroup 
+                            className="grid grid-cols-2 gap-4 mt-2"
+                            value={donationFrequency}
+                            onValueChange={setDonationFrequency}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="one-time" id="one-time" />
+                              <Label htmlFor="one-time">One-time</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="monthly" id="monthly" />
+                              <Label htmlFor="monthly">Monthly</Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="message">Message (Optional)</Label>
+                          <Textarea
+                            id="message"
+                            placeholder="Add a message to your donation"
+                            value={itemDescription}
+                            onChange={(e) => setItemDescription(e.target.value)}
+                          />
                           </div>
                         </div>
                       </div>
