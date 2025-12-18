@@ -34,7 +34,7 @@
     "framer-motion": "^12.4.10",
     "lucide-react": "^0.479.0",
     "multer": "^1.4.5-lts.2",
-    "next": "15.1.7",
+    "next": "15.1.11",
     "next-connect": "^1.0.0",
     "react": "^19.0.0",
     "react-day-picker": "^8.10.1",
